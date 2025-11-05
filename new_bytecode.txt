@@ -1,0 +1,544 @@
+ javap -c -v  bin/out/app/Serv.class
+Classfile /home/vignol-bande/.local/share/Trash/files/odb-dan.6/bin/out/app/Serv.class
+  Last modified Nov 4, 2025; size 5674 bytes
+  SHA-256 checksum 3db5cb404e42c3a6396521c2a0bcb2be0a5796b0e75c4eb90c99afb5f0325992
+  Compiled from "Serv.java"
+public class app.Serv extends jakarta.servlet.http.HttpServlet
+  minor version: 0
+  major version: 65
+  flags: (0x0021) ACC_PUBLIC, ACC_SUPER
+  this_class: #2                          // app/Serv
+  super_class: #4                         // jakarta/servlet/http/HttpServlet
+  interfaces: 0, fields: 1, methods: 6, attributes: 4
+Constant pool:
+    #1 = Utf8               app/Serv
+    #2 = Class              #1            // app/Serv
+    #3 = Utf8               jakarta/servlet/http/HttpServlet
+    #4 = Class              #3            // jakarta/servlet/http/HttpServlet
+    #5 = Utf8               Serv.java
+    #6 = Utf8               Ljakarta/servlet/annotation/WebServlet;
+    #7 = Utf8               value
+    #8 = Utf8               /Serv
+    #9 = Utf8               java/net/http/HttpRequest$Builder
+   #10 = Class              #9            // java/net/http/HttpRequest$Builder
+   #11 = Utf8               java/net/http/HttpRequest
+   #12 = Class              #11           // java/net/http/HttpRequest
+   #13 = Utf8               Builder
+   #14 = Utf8               java/net/http/HttpResponse$BodyHandlers
+   #15 = Class              #14           // java/net/http/HttpResponse$BodyHandlers
+   #16 = Utf8               java/net/http/HttpResponse
+   #17 = Class              #16           // java/net/http/HttpResponse
+   #18 = Utf8               BodyHandlers
+   #19 = Utf8               java/net/http/HttpResponse$BodyHandler
+   #20 = Class              #19           // java/net/http/HttpResponse$BodyHandler
+   #21 = Utf8               BodyHandler
+   #22 = Utf8               java/lang/invoke/MethodHandles$Lookup
+   #23 = Class              #22           // java/lang/invoke/MethodHandles$Lookup
+   #24 = Utf8               java/lang/invoke/MethodHandles
+   #25 = Class              #24           // java/lang/invoke/MethodHandles
+   #26 = Utf8               Lookup
+   #27 = Utf8               client
+   #28 = Utf8               Ljava/net/http/HttpClient;
+   #29 = Utf8               <init>
+   #30 = Utf8               ()V
+   #31 = NameAndType        #29:#30       // "<init>":()V
+   #32 = Methodref          #4.#31        // jakarta/servlet/http/HttpServlet."<init>":()V
+   #33 = Utf8               java/net/http/HttpClient
+   #34 = Class              #33           // java/net/http/HttpClient
+   #35 = Utf8               newHttpClient
+   #36 = Utf8               ()Ljava/net/http/HttpClient;
+   #37 = NameAndType        #35:#36       // newHttpClient:()Ljava/net/http/HttpClient;
+   #38 = Methodref          #34.#37       // java/net/http/HttpClient.newHttpClient:()Ljava/net/http/HttpClient;
+   #39 = NameAndType        #27:#28       // client:Ljava/net/http/HttpClient;
+   #40 = Fieldref           #2.#39        // app/Serv.client:Ljava/net/http/HttpClient;
+   #41 = Utf8               this
+   #42 = Utf8               Lapp/Serv;
+   #43 = Utf8               doGet
+   #44 = Utf8               (Ljakarta/servlet/http/HttpServletRequest;Ljakarta/servlet/http/HttpServletResponse;)V
+   #45 = Utf8               jakarta/servlet/ServletException
+   #46 = Class              #45           // jakarta/servlet/ServletException
+   #47 = Utf8               java/io/IOException
+   #48 = Class              #47           // java/io/IOException
+   #49 = Utf8               java/lang/Exception
+   #50 = Class              #49           // java/lang/Exception
+   #51 = Utf8               odb/MyHttpServletRequest
+   #52 = Class              #51           // odb/MyHttpServletRequest
+   #53 = Utf8               (Ljakarta/servlet/http/HttpServletRequest;)V
+   #54 = NameAndType        #29:#53       // "<init>":(Ljakarta/servlet/http/HttpServletRequest;)V
+   #55 = Methodref          #52.#54       // odb/MyHttpServletRequest."<init>":(Ljakarta/servlet/http/HttpServletRequest;)V
+   #56 = Utf8               odb/MyHttpServletResponse
+   #57 = Class              #56           // odb/MyHttpServletResponse
+   #58 = Utf8               (Ljakarta/servlet/http/HttpServletResponse;)V
+   #59 = NameAndType        #29:#58       // "<init>":(Ljakarta/servlet/http/HttpServletResponse;)V
+   #60 = Methodref          #57.#59       // odb/MyHttpServletResponse."<init>":(Ljakarta/servlet/http/HttpServletResponse;)V
+   #61 = Utf8               machine
+   #62 = String             #61           // machine
+   #63 = Utf8               getParameter
+   #64 = Utf8               (Ljava/lang/String;)Ljava/lang/String;
+   #65 = NameAndType        #63:#64       // getParameter:(Ljava/lang/String;)Ljava/lang/String;
+   #66 = InterfaceMethodref #52.#65       // odb/MyHttpServletRequest.getParameter:(Ljava/lang/String;)Ljava/lang/String;
+   #67 = Utf8               image
+   #68 = String             #67           // image
+   #69 = Utf8               getServletContext
+   #70 = Utf8               ()Ljakarta/servlet/ServletContext;
+   #71 = NameAndType        #69:#70       // getServletContext:()Ljakarta/servlet/ServletContext;
+   #72 = InterfaceMethodref #52.#71       // odb/MyHttpServletRequest.getServletContext:()Ljakarta/servlet/ServletContext;
+   #73 = Utf8               /\u0001
+   #74 = String             #73           // /\u0001
+   #75 = Utf8               java/lang/invoke/StringConcatFactory
+   #76 = Class              #75           // java/lang/invoke/StringConcatFactory
+   #77 = Utf8               makeConcatWithConstants
+   #78 = Utf8               (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;
+   #79 = NameAndType        #77:#78       // makeConcatWithConstants:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;
+   #80 = Methodref          #76.#79       // java/lang/invoke/StringConcatFactory.makeConcatWithConstants:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;
+   #81 = MethodHandle       6:#80         // REF_invokeStatic java/lang/invoke/StringConcatFactory.makeConcatWithConstants:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;
+   #82 = NameAndType        #77:#64       // makeConcatWithConstants:(Ljava/lang/String;)Ljava/lang/String;
+   #83 = InvokeDynamic      #0:#82        // #0:makeConcatWithConstants:(Ljava/lang/String;)Ljava/lang/String;
+   #84 = Utf8               jakarta/servlet/ServletContext
+   #85 = Class              #84           // jakarta/servlet/ServletContext
+   #86 = Utf8               getResourceAsStream
+   #87 = Utf8               (Ljava/lang/String;)Ljava/io/InputStream;
+   #88 = NameAndType        #86:#87       // getResourceAsStream:(Ljava/lang/String;)Ljava/io/InputStream;
+   #89 = InterfaceMethodref #85.#88       // jakarta/servlet/ServletContext.getResourceAsStream:(Ljava/lang/String;)Ljava/io/InputStream;
+   #90 = Utf8               odb/MyInputStream
+   #91 = Class              #90           // odb/MyInputStream
+   #92 = Utf8               (Ljava/io/InputStream;ZLjava/io/ObjectInputStream;)V
+   #93 = NameAndType        #29:#92       // "<init>":(Ljava/io/InputStream;ZLjava/io/ObjectInputStream;)V
+   #94 = Methodref          #91.#93       // odb/MyInputStream."<init>":(Ljava/io/InputStream;ZLjava/io/ObjectInputStream;)V
+   #95 = Utf8               readAllBytes
+   #96 = Utf8               ()Lpack/Pair;
+   #97 = NameAndType        #95:#96       // readAllBytes:()Lpack/Pair;
+   #98 = Methodref          #91.#97       // odb/MyInputStream.readAllBytes:()Lpack/Pair;
+   #99 = Methodref          #2.#71        // app/Serv.getServletContext:()Ljakarta/servlet/ServletContext;
+  #100 = Utf8               getMimeType
+  #101 = NameAndType        #100:#64      // getMimeType:(Ljava/lang/String;)Ljava/lang/String;
+  #102 = InterfaceMethodref #85.#101      // jakarta/servlet/ServletContext.getMimeType:(Ljava/lang/String;)Ljava/lang/String;
+  #103 = Utf8               setContentType
+  #104 = Utf8               (Ljava/lang/String;)V
+  #105 = NameAndType        #103:#104     // setContentType:(Ljava/lang/String;)V
+  #106 = InterfaceMethodref #57.#105      // odb/MyHttpServletResponse.setContentType:(Ljava/lang/String;)V
+  #107 = Utf8               setContentLength
+  #108 = Utf8               (I)V
+  #109 = NameAndType        #107:#108     // setContentLength:(I)V
+  #110 = InterfaceMethodref #57.#109      // odb/MyHttpServletResponse.setContentLength:(I)V
+  #111 = Utf8               getOutputStream
+  #112 = Utf8               ()Lodb/MyServletOutputStream;
+  #113 = NameAndType        #111:#112     // getOutputStream:()Lodb/MyServletOutputStream;
+  #114 = InterfaceMethodref #57.#113      // odb/MyHttpServletResponse.getOutputStream:()Lodb/MyServletOutputStream;
+  #115 = Utf8               odb/MyServletOutputStream
+  #116 = Class              #115          // odb/MyServletOutputStream
+  #117 = Utf8               write
+  #118 = Utf8               (Lpack/Pair;)V
+  #119 = NameAndType        #117:#118     // write:(Lpack/Pair;)V
+  #120 = Methodref          #116.#119     // odb/MyServletOutputStream.write:(Lpack/Pair;)V
+  #121 = Utf8               http://\u0001:8080/serv/Serv?image=\u0001
+  #122 = String             #121          // http://\u0001:8080/serv/Serv?image=\u0001
+  #123 = Utf8               (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+  #124 = NameAndType        #77:#123      // makeConcatWithConstants:(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+  #125 = InvokeDynamic      #1:#124       // #1:makeConcatWithConstants:(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+  #126 = Utf8               newBuilder
+  #127 = Utf8               ()Ljava/net/http/HttpRequest$Builder;
+  #128 = NameAndType        #126:#127     // newBuilder:()Ljava/net/http/HttpRequest$Builder;
+  #129 = Methodref          #12.#128      // java/net/http/HttpRequest.newBuilder:()Ljava/net/http/HttpRequest$Builder;
+  #130 = Utf8               java/net/URI
+  #131 = Class              #130          // java/net/URI
+  #132 = Utf8               create
+  #133 = Utf8               (Ljava/lang/String;)Ljava/net/URI;
+  #134 = NameAndType        #132:#133     // create:(Ljava/lang/String;)Ljava/net/URI;
+  #135 = Methodref          #131.#134     // java/net/URI.create:(Ljava/lang/String;)Ljava/net/URI;
+  #136 = Utf8               uri
+  #137 = Utf8               (Ljava/net/URI;)Ljava/net/http/HttpRequest$Builder;
+  #138 = NameAndType        #136:#137     // uri:(Ljava/net/URI;)Ljava/net/http/HttpRequest$Builder;
+  #139 = InterfaceMethodref #10.#138      // java/net/http/HttpRequest$Builder.uri:(Ljava/net/URI;)Ljava/net/http/HttpRequest$Builder;
+  #140 = Utf8               GET
+  #141 = NameAndType        #140:#127     // GET:()Ljava/net/http/HttpRequest$Builder;
+  #142 = InterfaceMethodref #10.#141      // java/net/http/HttpRequest$Builder.GET:()Ljava/net/http/HttpRequest$Builder;
+  #143 = Utf8               build
+  #144 = Utf8               ()Ljava/net/http/HttpRequest;
+  #145 = NameAndType        #143:#144     // build:()Ljava/net/http/HttpRequest;
+  #146 = InterfaceMethodref #10.#145      // java/net/http/HttpRequest$Builder.build:()Ljava/net/http/HttpRequest;
+  #147 = Utf8               ofByteArray
+  #148 = Utf8               ()Ljava/net/http/HttpResponse$BodyHandler;
+  #149 = NameAndType        #147:#148     // ofByteArray:()Ljava/net/http/HttpResponse$BodyHandler;
+  #150 = Methodref          #15.#149      // java/net/http/HttpResponse$BodyHandlers.ofByteArray:()Ljava/net/http/HttpResponse$BodyHandler;
+  #151 = Utf8               send
+  #152 = Utf8               (Ljava/net/http/HttpRequest;Ljava/net/http/HttpResponse$BodyHandler;)Ljava/net/http/HttpResponse;
+  #153 = NameAndType        #151:#152     // send:(Ljava/net/http/HttpRequest;Ljava/net/http/HttpResponse$BodyHandler;)Ljava/net/http/HttpResponse;
+  #154 = Methodref          #34.#153      // java/net/http/HttpClient.send:(Ljava/net/http/HttpRequest;Ljava/net/http/HttpResponse$BodyHandler;)Ljava/net/http/HttpResponse;
+  #155 = Utf8               headers
+  #156 = Utf8               ()Ljava/net/http/HttpHeaders;
+  #157 = NameAndType        #155:#156     // headers:()Ljava/net/http/HttpHeaders;
+  #158 = InterfaceMethodref #17.#157      // java/net/http/HttpResponse.headers:()Ljava/net/http/HttpHeaders;
+  #159 = Utf8               Content-Type
+  #160 = String             #159          // Content-Type
+  #161 = Utf8               java/net/http/HttpHeaders
+  #162 = Class              #161          // java/net/http/HttpHeaders
+  #163 = Utf8               firstValue
+  #164 = Utf8               (Ljava/lang/String;)Ljava/util/Optional;
+  #165 = NameAndType        #163:#164     // firstValue:(Ljava/lang/String;)Ljava/util/Optional;
+  #166 = Methodref          #162.#165     // java/net/http/HttpHeaders.firstValue:(Ljava/lang/String;)Ljava/util/Optional;
+  #167 = Utf8               (Ljava/lang/Object;)V
+  #168 = MethodType         #167          //  (Ljava/lang/Object;)V
+  #169 = Utf8               lambda$doGet$0
+  #170 = Utf8               (Ljakarta/servlet/http/HttpServletResponse;Ljava/lang/String;)V
+  #171 = NameAndType        #169:#170     // lambda$doGet$0:(Ljakarta/servlet/http/HttpServletResponse;Ljava/lang/String;)V
+  #172 = Methodref          #2.#171       // app/Serv.lambda$doGet$0:(Ljakarta/servlet/http/HttpServletResponse;Ljava/lang/String;)V
+  #173 = MethodHandle       6:#172        // REF_invokeStatic app/Serv.lambda$doGet$0:(Ljakarta/servlet/http/HttpServletResponse;Ljava/lang/String;)V
+  #174 = MethodType         #104          //  (Ljava/lang/String;)V
+  #175 = Utf8               java/lang/invoke/LambdaMetafactory
+  #176 = Class              #175          // java/lang/invoke/LambdaMetafactory
+  #177 = Utf8               metafactory
+  #178 = Utf8               (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+  #179 = NameAndType        #177:#178     // metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+  #180 = Methodref          #176.#179     // java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+  #181 = MethodHandle       6:#180        // REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+  #182 = Utf8               accept
+  #183 = Utf8               (Ljakarta/servlet/http/HttpServletResponse;)Ljava/util/function/Consumer;
+  #184 = NameAndType        #182:#183     // accept:(Ljakarta/servlet/http/HttpServletResponse;)Ljava/util/function/Consumer;
+  #185 = InvokeDynamic      #2:#184       // #2:accept:(Ljakarta/servlet/http/HttpServletResponse;)Ljava/util/function/Consumer;
+  #186 = Utf8               java/util/Optional
+  #187 = Class              #186          // java/util/Optional
+  #188 = Utf8               ifPresent
+  #189 = Utf8               (Ljava/util/function/Consumer;)V
+  #190 = NameAndType        #188:#189     // ifPresent:(Ljava/util/function/Consumer;)V
+  #191 = Methodref          #187.#190     // java/util/Optional.ifPresent:(Ljava/util/function/Consumer;)V
+  #192 = Utf8               Content-Length
+  #193 = String             #192          // Content-Length
+  #194 = Utf8               lambda$doGet$1
+  #195 = NameAndType        #194:#170     // lambda$doGet$1:(Ljakarta/servlet/http/HttpServletResponse;Ljava/lang/String;)V
+  #196 = Methodref          #2.#195       // app/Serv.lambda$doGet$1:(Ljakarta/servlet/http/HttpServletResponse;Ljava/lang/String;)V
+  #197 = MethodHandle       6:#196        // REF_invokeStatic app/Serv.lambda$doGet$1:(Ljakarta/servlet/http/HttpServletResponse;Ljava/lang/String;)V
+  #198 = InvokeDynamic      #3:#184       // #3:accept:(Ljakarta/servlet/http/HttpServletResponse;)Ljava/util/function/Consumer;
+  #199 = Utf8               Cache-Control
+  #200 = String             #199          // Cache-Control
+  #201 = Utf8               allValues
+  #202 = Utf8               (Ljava/lang/String;)Ljava/util/List;
+  #203 = NameAndType        #201:#202     // allValues:(Ljava/lang/String;)Ljava/util/List;
+  #204 = Methodref          #162.#203     // java/net/http/HttpHeaders.allValues:(Ljava/lang/String;)Ljava/util/List;
+  #205 = Utf8               lambda$doGet$2
+  #206 = NameAndType        #205:#170     // lambda$doGet$2:(Ljakarta/servlet/http/HttpServletResponse;Ljava/lang/String;)V
+  #207 = Methodref          #2.#206       // app/Serv.lambda$doGet$2:(Ljakarta/servlet/http/HttpServletResponse;Ljava/lang/String;)V
+  #208 = MethodHandle       6:#207        // REF_invokeStatic app/Serv.lambda$doGet$2:(Ljakarta/servlet/http/HttpServletResponse;Ljava/lang/String;)V
+  #209 = InvokeDynamic      #4:#184       // #4:accept:(Ljakarta/servlet/http/HttpServletResponse;)Ljava/util/function/Consumer;
+  #210 = Utf8               java/util/List
+  #211 = Class              #210          // java/util/List
+  #212 = Utf8               forEach
+  #213 = NameAndType        #212:#189     // forEach:(Ljava/util/function/Consumer;)V
+  #214 = InterfaceMethodref #211.#213     // java/util/List.forEach:(Ljava/util/function/Consumer;)V
+  #215 = Utf8               body
+  #216 = Utf8               ()Ljava/lang/Object;
+  #217 = NameAndType        #215:#216     // body:()Ljava/lang/Object;
+  #218 = InterfaceMethodref #17.#217      // java/net/http/HttpResponse.body:()Ljava/lang/Object;
+  #219 = Utf8               [B
+  #220 = Class              #219          // "[B"
+  #221 = Utf8               pack/Pair
+  #222 = Class              #221          // pack/Pair
+  #223 = Utf8               ([BZ)V
+  #224 = NameAndType        #29:#223      // "<init>":([BZ)V
+  #225 = Methodref          #222.#224     // pack/Pair."<init>":([BZ)V
+  #226 = Utf8               printStackTrace
+  #227 = NameAndType        #226:#30      // printStackTrace:()V
+  #228 = Methodref          #50.#227      // java/lang/Exception.printStackTrace:()V
+  #229 = Utf8               file
+  #230 = Utf8               Ljava/io/InputStream;
+  #231 = Utf8               bytes
+  #232 = Utf8               resp
+  #233 = Utf8               Ljava/net/http/HttpResponse<[B>;
+  #234 = Utf8               Ljava/net/http/HttpResponse;
+  #235 = Utf8               e
+  #236 = Utf8               Ljava/lang/Exception;
+  #237 = Utf8               request
+  #238 = Utf8               Ljakarta/servlet/http/HttpServletRequest;
+  #239 = Utf8               response
+  #240 = Utf8               Ljakarta/servlet/http/HttpServletResponse;
+  #241 = Utf8               Ljava/lang/String;
+  #242 = Utf8               url
+  #243 = Utf8               req
+  #244 = Utf8               Ljava/net/http/HttpRequest;
+  #245 = Utf8               wrappedRequest
+  #246 = Utf8               Lodb/MyHttpServletRequest;
+  #247 = Utf8               wrappedResponse
+  #248 = Utf8               Lodb/MyHttpServletResponse;
+  #249 = Utf8               jakarta/servlet/http/HttpServletRequest
+  #250 = Class              #249          // jakarta/servlet/http/HttpServletRequest
+  #251 = Utf8               jakarta/servlet/http/HttpServletResponse
+  #252 = Class              #251          // jakarta/servlet/http/HttpServletResponse
+  #253 = Utf8               java/lang/String
+  #254 = Class              #253          // java/lang/String
+  #255 = Utf8               java/lang/Object
+  #256 = Class              #255          // java/lang/Object
+  #257 = Utf8               doPost
+  #258 = Utf8               (Lodb/MyHttpServletResponse;Ljava/lang/String;)V
+  #259 = Utf8               addHeader
+  #260 = Utf8               (Ljava/lang/String;Ljava/lang/String;)V
+  #261 = NameAndType        #259:#260     // addHeader:(Ljava/lang/String;Ljava/lang/String;)V
+  #262 = InterfaceMethodref #57.#261      // odb/MyHttpServletResponse.addHeader:(Ljava/lang/String;Ljava/lang/String;)V
+  #263 = Utf8               cc
+  #264 = Utf8               setHeader
+  #265 = NameAndType        #264:#260     // setHeader:(Ljava/lang/String;Ljava/lang/String;)V
+  #266 = InterfaceMethodref #57.#265      // odb/MyHttpServletResponse.setHeader:(Ljava/lang/String;Ljava/lang/String;)V
+  #267 = Utf8               cl
+  #268 = Utf8               ct
+  #269 = Utf8               Code
+  #270 = Utf8               LineNumberTable
+  #271 = Utf8               LocalVariableTable
+  #272 = Utf8               StackMapTable
+  #273 = Utf8               LocalVariableTypeTable
+  #274 = Utf8               Exceptions
+  #275 = Utf8               InnerClasses
+  #276 = Utf8               SourceFile
+  #277 = Utf8               RuntimeVisibleAnnotations
+  #278 = Utf8               BootstrapMethods
+{
+  public app.Serv();
+    descriptor: ()V
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=2, locals=1, args_size=1
+         0: aload_0
+         1: invokespecial #32                 // Method jakarta/servlet/http/HttpServlet."<init>":()V
+         4: aload_0
+         5: invokestatic  #38                 // Method java/net/http/HttpClient.newHttpClient:()Ljava/net/http/HttpClient;
+         8: putfield      #40                 // Field client:Ljava/net/http/HttpClient;
+        11: return
+      LineNumberTable:
+        line 17: 0
+        line 19: 4
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      12     0  this   Lapp/Serv;
+
+  protected void doGet(jakarta.servlet.http.HttpServletRequest, jakarta.servlet.http.HttpServletResponse) throws jakarta.servlet.ServletException, java.io.IOException;
+    descriptor: (Ljakarta/servlet/http/HttpServletRequest;Ljakarta/servlet/http/HttpServletResponse;)V
+    flags: (0x0004) ACC_PROTECTED
+    Code:
+      stack=5, locals=10, args_size=3
+         0: new           #52                 // class odb/MyHttpServletRequest
+         3: dup
+         4: aload         8
+         6: invokespecial #55                 // Method odb/MyHttpServletRequest."<init>":(Ljakarta/servlet/http/HttpServletRequest;)V
+         9: astore        8
+        11: new           #57                 // class odb/MyHttpServletResponse
+        14: dup
+        15: aload         9
+        17: invokespecial #60                 // Method odb/MyHttpServletResponse."<init>":(Ljakarta/servlet/http/HttpServletResponse;)V
+        20: astore        9
+        22: aload         8
+        24: ldc           #62                 // String machine
+        26: invokeinterface #66,  2           // InterfaceMethod odb/MyHttpServletRequest.getParameter:(Ljava/lang/String;)Ljava/lang/String;
+        31: astore_3
+        32: aload         8
+        34: ldc           #68                 // String image
+        36: invokeinterface #66,  2           // InterfaceMethod odb/MyHttpServletRequest.getParameter:(Ljava/lang/String;)Ljava/lang/String;
+        41: astore        4
+        43: aload_3
+        44: ifnonnull     126
+        47: aload         8
+        49: invokeinterface #72,  1           // InterfaceMethod odb/MyHttpServletRequest.getServletContext:()Ljakarta/servlet/ServletContext;
+        54: aload         4
+        56: invokedynamic #83,  0             // InvokeDynamic #0:makeConcatWithConstants:(Ljava/lang/String;)Ljava/lang/String;
+        61: invokeinterface #89,  2           // InterfaceMethod jakarta/servlet/ServletContext.getResourceAsStream:(Ljava/lang/String;)Ljava/io/InputStream;
+        66: new           #91                 // class odb/MyInputStream
+        69: dup_x1
+        70: swap
+        71: iconst_0
+        72: aconst_null
+        73: invokespecial #94                 // Method odb/MyInputStream."<init>":(Ljava/io/InputStream;ZLjava/io/ObjectInputStream;)V
+        76: astore        5
+        78: aload         5
+        80: invokevirtual #98                 // Method odb/MyInputStream.readAllBytes:()Lpack/Pair;
+        83: astore        6
+        85: aload         9
+        87: aload_0
+        88: invokevirtual #99                 // Method getServletContext:()Ljakarta/servlet/ServletContext;
+        91: aload         4
+        93: invokeinterface #102,  2          // InterfaceMethod jakarta/servlet/ServletContext.getMimeType:(Ljava/lang/String;)Ljava/lang/String;
+        98: invokeinterface #106,  2          // InterfaceMethod odb/MyHttpServletResponse.setContentType:(Ljava/lang/String;)V
+       103: aload         9
+       105: aload         6
+       107: arraylength
+       108: invokeinterface #110,  2          // InterfaceMethod odb/MyHttpServletResponse.setContentLength:(I)V
+       113: aload         9
+       115: invokeinterface #114,  1          // InterfaceMethod odb/MyHttpServletResponse.getOutputStream:()Lodb/MyServletOutputStream;
+       120: aload         6
+       122: invokevirtual #120                // Method odb/MyServletOutputStream.write:(Lpack/Pair;)V
+       125: return
+       126: aload_3
+       127: aload         4
+       129: invokedynamic #125,  0            // InvokeDynamic #1:makeConcatWithConstants:(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+       134: astore        5
+       136: invokestatic  #129                // Method java/net/http/HttpRequest.newBuilder:()Ljava/net/http/HttpRequest$Builder;
+       139: aload         5
+       141: invokestatic  #135                // Method java/net/URI.create:(Ljava/lang/String;)Ljava/net/URI;
+       144: invokeinterface #139,  2          // InterfaceMethod java/net/http/HttpRequest$Builder.uri:(Ljava/net/URI;)Ljava/net/http/HttpRequest$Builder;
+       149: invokeinterface #142,  1          // InterfaceMethod java/net/http/HttpRequest$Builder.GET:()Ljava/net/http/HttpRequest$Builder;
+       154: invokeinterface #146,  1          // InterfaceMethod java/net/http/HttpRequest$Builder.build:()Ljava/net/http/HttpRequest;
+       159: astore        6
+       161: aload_0
+       162: getfield      #40                 // Field client:Ljava/net/http/HttpClient;
+       165: aload         6
+       167: invokestatic  #150                // Method java/net/http/HttpResponse$BodyHandlers.ofByteArray:()Ljava/net/http/HttpResponse$BodyHandler;
+       170: invokevirtual #154                // Method java/net/http/HttpClient.send:(Ljava/net/http/HttpRequest;Ljava/net/http/HttpResponse$BodyHandler;)Ljava/net/http/HttpResponse;
+       173: astore        7
+       175: aload         7
+       177: invokeinterface #158,  1          // InterfaceMethod java/net/http/HttpResponse.headers:()Ljava/net/http/HttpHeaders;
+       182: ldc           #160                // String Content-Type
+       184: invokevirtual #166                // Method java/net/http/HttpHeaders.firstValue:(Ljava/lang/String;)Ljava/util/Optional;
+       187: aload         9
+       189: invokedynamic #185,  0            // InvokeDynamic #2:accept:(Ljakarta/servlet/http/HttpServletResponse;)Ljava/util/function/Consumer;
+       194: invokevirtual #191                // Method java/util/Optional.ifPresent:(Ljava/util/function/Consumer;)V
+       197: aload         7
+       199: invokeinterface #158,  1          // InterfaceMethod java/net/http/HttpResponse.headers:()Ljava/net/http/HttpHeaders;
+       204: ldc           #193                // String Content-Length
+       206: invokevirtual #166                // Method java/net/http/HttpHeaders.firstValue:(Ljava/lang/String;)Ljava/util/Optional;
+       209: aload         9
+       211: invokedynamic #198,  0            // InvokeDynamic #3:accept:(Ljakarta/servlet/http/HttpServletResponse;)Ljava/util/function/Consumer;
+       216: invokevirtual #191                // Method java/util/Optional.ifPresent:(Ljava/util/function/Consumer;)V
+       219: aload         7
+       221: invokeinterface #158,  1          // InterfaceMethod java/net/http/HttpResponse.headers:()Ljava/net/http/HttpHeaders;
+       226: ldc           #200                // String Cache-Control
+       228: invokevirtual #204                // Method java/net/http/HttpHeaders.allValues:(Ljava/lang/String;)Ljava/util/List;
+       231: aload         9
+       233: invokedynamic #209,  0            // InvokeDynamic #4:accept:(Ljakarta/servlet/http/HttpServletResponse;)Ljava/util/function/Consumer;
+       238: invokeinterface #214,  2          // InterfaceMethod java/util/List.forEach:(Ljava/util/function/Consumer;)V
+       243: aload         9
+       245: invokeinterface #114,  1          // InterfaceMethod odb/MyHttpServletResponse.getOutputStream:()Lodb/MyServletOutputStream;
+       250: aload         7
+       252: invokeinterface #218,  1          // InterfaceMethod java/net/http/HttpResponse.body:()Ljava/lang/Object;
+       257: checkcast     #220                // class "[B"
+       260: new           #222                // class pack/Pair
+       263: dup_x1
+       264: swap
+       265: iconst_1
+       266: invokespecial #225                // Method pack/Pair."<init>":([BZ)V
+       269: invokevirtual #120                // Method odb/MyServletOutputStream.write:(Lpack/Pair;)V
+       272: goto          282
+       275: astore        7
+       277: aload         7
+       279: invokevirtual #228                // Method java/lang/Exception.printStackTrace:()V
+       282: return
+      Exception table:
+         from    to  target type
+           161   272   275   Class java/lang/Exception
+      StackMapTable: number_of_entries = 3
+        frame_type = 255 /* full_frame */
+          offset_delta = 126
+          locals = [ class app/Serv, class jakarta/servlet/http/HttpServletRequest, class jakarta/servlet/http/HttpServletResponse, class java/lang/String, class java/lang/String, top, top, top, class odb/MyHttpServletRequest, class odb/MyHttpServletResponse ]
+          stack = []
+        frame_type = 255 /* full_frame */
+          offset_delta = 148
+          locals = [ class app/Serv, class jakarta/servlet/http/HttpServletRequest, class jakarta/servlet/http/HttpServletResponse, class java/lang/String, class java/lang/String, class java/lang/String, class java/net/http/HttpRequest, top, class odb/MyHttpServletRequest, class odb/MyHttpServletResponse ]
+          stack = [ class java/lang/Exception ]
+        frame_type = 255 /* full_frame */
+          offset_delta = 6
+          locals = [ class app/Serv, class jakarta/servlet/http/HttpServletRequest, class jakarta/servlet/http/HttpServletResponse, class java/lang/String, class java/lang/String, class java/lang/String, class java/net/http/HttpRequest, class java/lang/Object, class odb/MyHttpServletRequest, class odb/MyHttpServletResponse ]
+          stack = []
+      LineNumberTable:
+        line 24: 22
+        line 25: 32
+        line 27: 43
+        line 28: 47
+        line 29: 78
+        line 30: 85
+        line 31: 103
+        line 32: 113
+        line 33: 125
+        line 36: 126
+        line 37: 136
+        line 38: 141
+        line 39: 149
+        line 40: 154
+        line 45: 161
+        line 47: 175
+        line 48: 194
+        line 49: 197
+        line 50: 216
+        line 51: 219
+        line 52: 238
+        line 53: 243
+        line 57: 272
+        line 55: 275
+        line 56: 277
+        line 58: 282
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+           78      48     5  file   Ljava/io/InputStream;
+           85      41     6 bytes   [B
+          175      97     7  resp   Ljava/net/http/HttpResponse;
+          277       5     7     e   Ljava/lang/Exception;
+           22     261     0  this   Lapp/Serv;
+           22     261     1 request   Ljakarta/servlet/http/HttpServletRequest;
+           22     261     2 response   Ljakarta/servlet/http/HttpServletResponse;
+           32     251     3 machine   Ljava/lang/String;
+           43     240     4 image   Ljava/lang/String;
+          136     147     5   url   Ljava/lang/String;
+          161     122     6   req   Ljava/net/http/HttpRequest;
+           22     261     8 wrappedRequest   Lodb/MyHttpServletRequest;
+           22     261     9 wrappedResponse   Lodb/MyHttpServletResponse;
+      LocalVariableTypeTable:
+        Start  Length  Slot  Name   Signature
+          175      97     7  resp   Ljava/net/http/HttpResponse<[B>;
+    Exceptions:
+      throws jakarta.servlet.ServletException, java.io.IOException
+
+  protected void doPost(jakarta.servlet.http.HttpServletRequest, jakarta.servlet.http.HttpServletResponse) throws jakarta.servlet.ServletException, java.io.IOException;
+    descriptor: (Ljakarta/servlet/http/HttpServletRequest;Ljakarta/servlet/http/HttpServletResponse;)V
+    flags: (0x0004) ACC_PROTECTED
+    Code:
+      stack=3, locals=5, args_size=3
+         0: new           #52                 // class odb/MyHttpServletRequest
+         3: dup
+         4: aload_3
+         5: invokespecial #55                 // Method odb/MyHttpServletRequest."<init>":(Ljakarta/servlet/http/HttpServletRequest;)V
+         8: astore_3
+         9: new           #57                 // class odb/MyHttpServletResponse
+        12: dup
+        13: aload         4
+        15: invokespecial #60                 // Method odb/MyHttpServletResponse."<init>":(Ljakarta/servlet/http/HttpServletResponse;)V
+        18: astore        4
+        20: return
+      LineNumberTable:
+        line 62: 20
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+           20       1     0  this   Lapp/Serv;
+           20       1     1 request   Ljakarta/servlet/http/HttpServletRequest;
+           20       1     2 response   Ljakarta/servlet/http/HttpServletResponse;
+           20       1     3 wrappedRequest   Lodb/MyHttpServletRequest;
+           20       1     4 wrappedResponse   Lodb/MyHttpServletResponse;
+    Exceptions:
+      throws jakarta.servlet.ServletException, java.io.IOException
+}
+InnerClasses:
+  public static #13= #10 of #12;          // Builder=class java/net/http/HttpRequest$Builder of class java/net/http/HttpRequest
+  public static #18= #15 of #17;          // BodyHandlers=class java/net/http/HttpResponse$BodyHandlers of class java/net/http/HttpResponse
+  public static #21= #20 of #17;          // BodyHandler=class java/net/http/HttpResponse$BodyHandler of class java/net/http/HttpResponse
+  public static final #26= #23 of #25;    // Lookup=class java/lang/invoke/MethodHandles$Lookup of class java/lang/invoke/MethodHandles
+SourceFile: "Serv.java"
+RuntimeVisibleAnnotations:
+  0: #6(#7=[s#8])
+    jakarta.servlet.annotation.WebServlet(
+      value=["/Serv"]
+    )
+BootstrapMethods:
+  0: #81 REF_invokeStatic java/lang/invoke/StringConcatFactory.makeConcatWithConstants:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #74 /\u0001
+  1: #81 REF_invokeStatic java/lang/invoke/StringConcatFactory.makeConcatWithConstants:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #122 http://\u0001:8080/serv/Serv?image=\u0001
+  2: #181 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #168 (Ljava/lang/Object;)V
+      #173 REF_invokeStatic app/Serv.lambda$doGet$0:(Ljakarta/servlet/http/HttpServletResponse;Ljava/lang/String;)V
+      #174 (Ljava/lang/String;)V
+  3: #181 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #168 (Ljava/lang/Object;)V
+      #197 REF_invokeStatic app/Serv.lambda$doGet$1:(Ljakarta/servlet/http/HttpServletResponse;Ljava/lang/String;)V
+      #174 (Ljava/lang/String;)V
+  4: #181 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #168 (Ljava/lang/Object;)V
+      #208 REF_invokeStatic app/Serv.lambda$doGet$2:(Ljakarta/servlet/http/HttpServletResponse;Ljava/lang/String;)V
+      #174 (Ljava/lang/String;)V
