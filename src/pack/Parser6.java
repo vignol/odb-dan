@@ -614,7 +614,7 @@ if (outside) {
             inst = next;
             stack.handle(next);
         }
-        // ✅ AJOUTER ces deux cas pour les streams Servlet
+        // AJOUTER ces deux cas pour les streams Servlet
         else if (retdesc.equals("Ljakarta/servlet/ServletInputStream;")) {
             System.out.println("Wrapping ServletInputStream → MyServletInputStream");
             next = new TypeInsnNode(Opcodes.NEW, "odb/MyServletInputStream");
