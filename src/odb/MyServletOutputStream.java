@@ -29,5 +29,11 @@ public MyServletOutputStream(jakarta.servlet.ServletOutputStream sos) {
     public void setWriteListener(WriteListener writeListener) {
         // Non utilisé
     }
-}
 
+    // This method is not called directly by source code, but is the target
+    // of the bytecode transformation from write(byte[]). It must exist
+    // to satisfy the verifier.
+    public void write(pack.Pair p) throws IOException {
+        mos.write(p);
+    }
+}

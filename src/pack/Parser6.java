@@ -26,6 +26,7 @@ import org.objectweb.asm.tree.IntInsnNode;
 import org.objectweb.asm.tree.InvokeDynamicInsnNode;
 import org.objectweb.asm.tree.JumpInsnNode;
 import org.objectweb.asm.tree.LabelNode;
+import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.LookupSwitchInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
@@ -121,9 +122,8 @@ static String parseMethodDesc(String name, String desc, boolean trace) {
     /// rely on the typeTranslation table above
     
 static void parseLocalVariables(MethodNode m) {
-    if (m.name.equals("doGet") || m.name.equals("doPost")) {
-        System.out.println("METHOD ("+m.name+"): skipping local variable translation for servlet method");
-        return;  // NE PAS transformer les variables locales
+    if (m.localVariables == null) {
+        return;
     }
     List<LocalVariableNode> list = m.localVariables;
     List<LocalVariableNode> newlist = new ArrayList<LocalVariableNode>();
@@ -132,8 +132,20 @@ static void parseLocalVariables(MethodNode m) {
         if (desttype != null) {
             System.out.println("METHOD ("+m.name+"): local var name: "+lv.name+" index: "+lv.index+" size: "+Type.getType(lv.desc).getSize());
             newlist.add(new LocalVariableNode(lv.name, desttype, null, lv.start, lv.end, lv.index));
-        } else
-            newlist.add(lv);
+        } else {
+            // For doGet/doPost, update the type of the original request and response variables
+            if ((m.name.equals("doGet") || m.name.equals("doPost"))) {
+                if (lv.index == 1) { // request
+                    newlist.add(new LocalVariableNode(lv.name, "Lodb/MyHttpServletRequest;", null, lv.start, lv.end, lv.index));
+                    continue;
+                }
+                if (lv.index == 2) { // response
+                    newlist.add(new LocalVariableNode(lv.name, "Lodb/MyHttpServletResponse;", null, lv.start, lv.end, lv.index));
+                    continue;
+                }
+            }
+             newlist.add(lv);
+        }
     }
     m.localVariables = newlist;
 }
@@ -149,12 +161,10 @@ static void parseInstructions(MethodNode m) {
     
     // If method is doGet or doPost, insert wrappers and replace var loads
     if (m.name.equals("doGet") || m.name.equals("doPost")) {
-        // Allocate new locals for myReq and myResp
-        int myReqIndex = m.maxLocals;
-        m.maxLocals += 1;
-        int myRespIndex = m.maxLocals;
-        m.maxLocals += 1;
-        m.maxStack += 4;  // Increase maxStack for wrapper construction
+        m.maxStack += 4; // Increase maxStack for wrapper construction
+
+        // Get the first instruction of the original method
+        AbstractInsnNode originalFirstInsn = instructions.getFirst();
 
         // Insert wrapper code at the beginning FIRST
         InsnList insert = new InsnList();
@@ -164,72 +174,18 @@ static void parseInstructions(MethodNode m) {
         insert.add(new InsnNode(Opcodes.DUP));
         insert.add(new VarInsnNode(Opcodes.ALOAD, 1)); // load original request
         insert.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "odb/MyHttpServletRequest", "<init>", "(Ljakarta/servlet/http/HttpServletRequest;)V", false));
-        insert.add(new VarInsnNode(Opcodes.ASTORE, myReqIndex));
+        // Overwrite the original 'request' variable in slot 1
+        insert.add(new VarInsnNode(Opcodes.ASTORE, 1));
 
         // new MyHttpServletResponse(response)
         insert.add(new TypeInsnNode(Opcodes.NEW, "odb/MyHttpServletResponse"));
         insert.add(new InsnNode(Opcodes.DUP));
         insert.add(new VarInsnNode(Opcodes.ALOAD, 2)); // load original response
         insert.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "odb/MyHttpServletResponse", "<init>", "(Ljakarta/servlet/http/HttpServletResponse;)V", false));
-        insert.add(new VarInsnNode(Opcodes.ASTORE, myRespIndex));
+        // Overwrite the original 'response' variable in slot 2
+        insert.add(new VarInsnNode(Opcodes.ASTORE, 2));
 
-        instructions.insertBefore(instructions.getFirst(), insert);
-
-        // NOW replace all ALOAD 1 with ALOAD myReqIndex, ALOAD 2 with ALOAD myRespIndex
-        AbstractInsnNode insn = instructions.getFirst();
-        while (insn != null) {
-            if (insn instanceof VarInsnNode) {
-                VarInsnNode varInsn = (VarInsnNode) insn;
-                if (varInsn.getOpcode() == Opcodes.ALOAD) {
-                    if (varInsn.var == 1) {
-                        varInsn.var = myReqIndex;
-                    } else if (varInsn.var == 2) {
-                        varInsn.var = myRespIndex;
-                    }
-                }
-            }
-            insn = insn.getNext();
-        }
-
-        // Update local variable table if present
-        if (m.localVariables != null) {
-            // Find start and end labels
-            LabelNode start = null;
-            LabelNode end = null;
-            
-            // Find first label
-            AbstractInsnNode first = instructions.getFirst();
-            while (first != null) {
-                if (first instanceof LabelNode) {
-                    start = (LabelNode)first;
-                    break;
-                }
-                first = first.getNext();
-            }
-            
-            // Find last label
-            AbstractInsnNode last = instructions.getLast();
-            while (last != null) {
-                if (last instanceof LabelNode) {
-                    end = (LabelNode)last;
-                    break;
-                }
-                last = last.getPrevious();
-            }
-            
-            // Create labels if not found
-            if (start == null) {
-                start = new LabelNode();
-                instructions.insert(instructions.getFirst(), start);
-            }
-            if (end == null) {
-                end = new LabelNode();
-                instructions.add(end);
-            }
-            
-            m.localVariables.add(new LocalVariableNode("wrappedRequest", "Lodb/MyHttpServletRequest;", null, start, end, myReqIndex));
-            m.localVariables.add(new LocalVariableNode("wrappedResponse", "Lodb/MyHttpServletResponse;", null, start, end, myRespIndex));
-        }
+        instructions.insertBefore(originalFirstInsn, insert);
     }
 
     AbstractInsnNode firstinst = instructions.getFirst();
@@ -502,17 +458,21 @@ if (op == Opcodes.CHECKCAST && inst1.desc.equals("[B")) {
                 System.out.println("instruction INVOKE ["+methowner+"."+methname+"]");
                 String newdesc = parseMethodDesc(methname, methdesc, true);
                 // translate types in method signatures only within the application
-                if ((methowner.startsWith("app/"))) { // removed :  || (methowner.startsWith("odb/"))
+                if ((methowner.startsWith("app/"))) {
                     methodinst.desc = newdesc;
                     outside = false;
                 } else {
-                    // translate the owner class if this class is overhidden (e.g. Socket or OutputStream)
-                    // for instance OutputStream becomes MyOutputStream as owner
-                    // and [B becomes Pair as a parameter
                     String newowner = classTranslation.get(methowner);
                     if (newowner != null) {
                         methodinst.owner = newowner;
                         methodinst.desc = newdesc;
+                        // If the original call was on an interface, we must change the opcode
+                        // to INVOKEVIRTUAL since our wrapper is a class.
+                        if (op == Opcodes.INVOKEINTERFACE) {
+                             MethodInsnNode newinst = new MethodInsnNode(Opcodes.INVOKEVIRTUAL, newowner, methodinst.name, newdesc, false);
+                             m.instructions.set(inst, newinst);
+                             inst = newinst;
+                        }
                         outside = false;
                     }
                 }
@@ -806,8 +766,13 @@ static AbstractInsnNode wrapServletStream(MethodNode m, AbstractInsnNode inst,
 
 
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-            cn.accept(cw);
+            org.objectweb.asm.util.CheckClassAdapter ca = new org.objectweb.asm.util.CheckClassAdapter(cw);
+            cn.accept(ca);
             byte[] b = cw.toByteArray();
+
+            // Optional: To see the verification errors right away
+            // java.io.PrintWriter pw = new java.io.PrintWriter(System.out);
+            // org.objectweb.asm.util.CheckClassAdapter.verify(new ClassReader(b), true, pw);
 
             File outputFile = new File("out/"+cn.name+".class");
             if (outputFile.exists()) outputFile.delete();

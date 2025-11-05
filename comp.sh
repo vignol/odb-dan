@@ -2,20 +2,18 @@
 
 ASM_HOME=$HOME/Downloads/asm-master
 ASM_JARS=$ASM_HOME/asm/build/libs/asm-9.10-SNAPSHOT.jar:$ASM_HOME/asm-analysis/build/libs/asm-analysis-9.10-SNAPSHOT.jar:$ASM_HOME/asm-commons/build/libs/asm-commons-9.10-SNAPSHOT.jar:$ASM_HOME/asm-tree/build/libs/asm-tree-9.10-SNAPSHOT.jar:$ASM_HOME/asm-util/build/libs/asm-util-9.10-SNAPSHOT.jar
-PROJECT_HOME=/home/vignol-bande/odb-dan
+PROJECT_HOME=$(pwd)
 
 cd $PROJECT_HOME/bin
-rm -rf out
+# Clear previous outputs, if any
+rm -rf app odb pack out
 mkdir out
 
-# Compiler Server.java
-javac -g -cp . -d . $PROJECT_HOME/src/app/Server.java
+# Compile all source files, placing them in the bin directory
+javac -g -cp .:$PROJECT_HOME/lib/jakarta.servlet-api-6.0.0.jar:$ASM_JARS -d . $(find $PROJECT_HOME/src -name "*.java")
 
-# Compiler Serv.java avec Jakarta Servlet API
-javac -g -cp .:$PROJECT_HOME/lib/jakarta.servlet-api-6.0.0.jar -d . $PROJECT_HOME/src/app/Serv.java
-
-# Copier uniquement les classes compilées en conservant l’arborescence
-cp -r * out/
+# Copy compiled classes to the 'out' directory for transformation
+cp -r app/ odb/ pack/ image.png out/
 
 # Exécuter Parser6 pour chaque classe spécifiée
 for class in "$@"; do
@@ -24,4 +22,3 @@ done
 
 cd $PROJECT_HOME
 echo "---------------"
-

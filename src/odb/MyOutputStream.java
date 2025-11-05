@@ -17,15 +17,17 @@ public class MyOutputStream {
     public MyOutputStream(OutputStream os, boolean isodb, ObjectOutputStream oos) {
         this.os = os;
         this.isodb = isodb;
-        this.oos = oos;
-        //System.out.println("MyOutputStream: constructor ("+isodb+")");
-        if (isodb)
+        if (isodb) {
             try {
+                this.oos = new ObjectOutputStream(os);
                 d = new Downloader();
                 d.start();
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        } else {
+            this.oos = oos;
+        }
     }
 
     public void write(int b) throws IOException {
@@ -89,7 +91,8 @@ public class MyOutputStream {
 
     public void close() throws IOException {
         os.close();
-        d.kill();
+        if (d != null) {
+            d.kill();
+        }
     }
 }
-
