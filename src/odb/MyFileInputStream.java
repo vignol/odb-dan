@@ -8,29 +8,15 @@ import pack.Pair;
 
 public class MyFileInputStream extends MyInputStream {
 
-    private FileInputStream fis;
-
     public MyFileInputStream(String name) throws FileNotFoundException {
-        this.fis = new FileInputStream(name);
+        super(new FileInputStream(name), false, null);
     }
 
-    public int read() throws IOException {
-            return fis.read();
+    public Pair readAllBytes() throws IOException {
+        // This is not efficient, but it's a simple way to implement this
+        // on top of the existing InputStream.
+        byte[] bytes = ((FileInputStream)super.is).readAllBytes();
+        return new Pair(bytes, true);
     }
 
-    public int read(Pair buff) throws IOException {
-        return read(buff, 0, buff._buff.length);
-    }
-
-    public int read(Pair buff, int off, int len) throws IOException {
-        if (!buff._access) {
-            // overwrite the buffer
-            buff._access = false;
-        }
-        return fis.read(buff._buff, off, len);
-    }
-
-    public void close() throws IOException {
-        fis.close();
-    }
 }
