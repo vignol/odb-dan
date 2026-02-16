@@ -302,8 +302,9 @@ static void parseInstructions(MethodNode m) {
                 if (desc != null && desc.equals("Lpack/Pair;")) {
                     // we should have on the stack : Pair
                     // here, we should access the [B within the Pair object
+                    AbstractInsnNode last = insertCheck(m.instructions, arrayinst.inst, stack);
                     AbstractInsnNode next = new FieldInsnNode(Opcodes.GETFIELD, "pack/Pair", "_buff", "[B");
-                    m.instructions.insert(arrayinst.inst, next);
+                    m.instructions.insert(last, next);
                     stack.handle(next);
                     stack.handle(inst);
                 } else
@@ -455,13 +456,15 @@ if (outside) {
     for (int i = args.length - 1; i >= 0; i--) {
         StackInst v = stack.pop();
         if (args[i].getDescriptor().equals("[B")) {
+            AbstractInsnNode last = insertCheck(m.instructions, v.inst, stack);
             AbstractInsnNode next = new FieldInsnNode(Opcodes.GETFIELD, "pack/Pair", "_buff", "[B");
-            m.instructions.insert(v.inst, next);
+            m.instructions.insert(last, next);
             st.push(new OneSlotInst(next));
+        } else {
+            st.push(v);
         }
-        st.push(v);
     }
-    for (int i = args.length - 1; i >= 0; i--) stack.push(st.pop());
+    for (int i = 0; i < args.length; i++) stack.push(st.pop());
     
     stack.handle(inst);
     

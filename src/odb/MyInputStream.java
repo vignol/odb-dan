@@ -98,7 +98,7 @@ public class MyInputStream {
 
     public Pair readAllBytes() throws IOException {
         byte[] bytes = is.readAllBytes();
-        return new Pair(bytes, true);
+        return Pair.wrap(bytes);
     }
 
     public void close() throws IOException {

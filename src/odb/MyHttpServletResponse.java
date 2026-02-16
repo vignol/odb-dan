@@ -24,4 +24,18 @@ public class MyHttpServletResponse extends HttpServletResponseWrapper {
     public MyServletOutputStream getOutputStream() throws IOException {
         return new MyServletOutputStream(new MyOutputStream(super.getOutputStream(), isodb, null));
     }
+
+    @Override
+    public void setContentLength(int len) {
+        if (!isodb) {
+            super.setContentLength(len);
+        }
+    }
+
+    @Override
+    public void setContentLengthLong(long len) {
+        if (!isodb) {
+            super.setContentLengthLong(len);
+        }
+    }
 }

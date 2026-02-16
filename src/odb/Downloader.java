@@ -6,6 +6,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.InetAddress;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 // We create on the server side a Downloader instance when a payload is remotely accessible 
@@ -13,10 +14,16 @@ import java.util.Map;
 // on the client side, the download() static method allows to download a payload
 public class Downloader extends Thread {
 
-    private boolean running = true;
+    private volatile boolean running = true;
     private int port;
     private int index = 0;
-    private Map<Integer,byte[]> payloads = new HashMap<Integer,byte[]>();
+    private Map<Integer,byte[]> payloads = new LinkedHashMap<Integer,byte[]>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<Integer, byte[]> eldest) {
+            return size() > 100; // Limit per-response payloads
+        }
+    };
+    private ServerSocket ss;
 
     public Downloader() {
     }
@@ -32,6 +39,9 @@ public class Downloader extends Thread {
 
     public void kill() {
         running = false;
+        try {
+            if (ss != null) ss.close();
+        } catch (Exception e) {}
     }
 
     public static String getLocalIP() {
@@ -82,8 +92,7 @@ public class Downloader extends Thread {
 
     public void run() {
         try {
-            @SuppressWarnings("resource")
-            ServerSocket ss = new ServerSocket();
+            ss = new ServerSocket();
             ss.bind(null);
             this.port = ss.getLocalPort();
             while (running) {
