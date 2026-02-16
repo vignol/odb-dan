@@ -248,6 +248,7 @@ static void parseInstructions(MethodNode m) {
     static AbstractInsnNode handleInstruction(MethodNode m, AbstractInsnNode inst, InstructionStack stack) {
         
         int op = inst.getOpcode();
+        if (op == -1) return inst;
 
         // ALOAD / ASTORE
         // nothing
@@ -627,7 +628,7 @@ if (outside) {
 
             for (MethodNode m : cn.methods) {
                 m.signature = null;
-                m.desc = parseMethodDesc(m.name,m.desc, false);
+                m.desc = parseMethodDesc(m.name,m.desc, true);
                 parseLocalVariables(m);
                 parseInstructions(m);
                 parseExceptionHandlers(m);
@@ -644,8 +645,10 @@ if (outside) {
             FileOutputStream fos = new FileOutputStream(outputFile);
             fos.write(b);
             fos.close();
+            System.out.println("Parsed and saved: " + args[0]);
 
         } catch (Exception ex) {
+            System.err.println("Exception during parsing of " + args[0]);
             ex.printStackTrace();
         }
     }
