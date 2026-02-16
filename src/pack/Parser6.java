@@ -506,7 +506,12 @@ if (outside) {
             inst = next;
             stack.handle(next);
             
-            next = new MethodInsnNode(Opcodes.INVOKESPECIAL, "odb/MyInputStream", "<init>", "(Ljava/io/InputStream;ZLjava/io/ObjectInputStream;)V", false);
+            next = new InsnNode(Opcodes.ICONST_0);
+            m.instructions.insert(inst, next);
+            inst = next;
+            stack.handle(next);
+
+            next = new MethodInsnNode(Opcodes.INVOKESPECIAL, "odb/MyInputStream", "<init>", "(Ljava/io/InputStream;ZLjava/io/ObjectInputStream;Z)V", false);
             m.instructions.insert(inst, next);
             inst = next;
             stack.handle(next);

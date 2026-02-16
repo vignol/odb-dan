@@ -22,6 +22,6 @@ public class MyHttpServletRequest extends HttpServletRequestWrapper {
 
     @Override
     public jakarta.servlet.ServletInputStream getInputStream() throws IOException {
-        return new MyServletInputStream(new MyInputStream(super.getInputStream(), isodb, null));
+        return new MyServletInputStream(new MyInputStream(super.getInputStream(), isodb, null, true));
     }
 }

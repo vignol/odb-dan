@@ -5,8 +5,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import pack.Handler;
 import pack.Pair;
@@ -15,24 +18,14 @@ public class MySocket {
 
     Socket s;
     boolean isodb;
-    ObjectInputStream ois = null;
-    ObjectOutputStream oos = null;
     
-    // list of hosts/ports that should be managed with ODB
-    // clients : when socket is used on the client side (with new MySocket(host,port)), these host/port should be ODB managed
-    // servers : when socket is used on the server side (with new MySocket(socket) / called from accept()), these ports should be ODB managed
-    static List<String> clients = List.of("localhost:2001","localhost:2002");
-    static List<Integer> servers = List.of(2001,2002);
+    static List<String> clients = new ArrayList<>(Arrays.asList(System.getProperty("odb.clients", "localhost:2001,localhost:2002").split(",")));
+    static List<Integer> servers = new ArrayList<>(Arrays.stream(System.getProperty("odb.servers", "2001,2002").split(",")).filter(s -> !s.isEmpty()).map(Integer::parseInt).collect(Collectors.toList()));
 
-    // the handler called when a buffer fault occurs
-    // it invokes the download of the payload
     static {
         final Function<Pair, Integer> handler = (p) -> {
-            System.out.println("#################################");
-            System.out.println("got buffer fault !!!");
-            System.out.println("#################################");
             VirtualDescriptor d = (VirtualDescriptor)p._desc;
-            System.out.println("Handler.bufferFault: download payload("+d.len+")");
+            System.out.println("Handler.bufferFault: download payload("+d.len+") from " + d.host + ":" + d.port);
             p._buff = odb.Downloader.download(d.host, d.port, d.payloadid);
             p._access = true;
             return null;
@@ -40,34 +33,32 @@ public class MySocket {
         Handler.registerHandler(handler);
     }
 
-
     public MySocket(String host, int port) throws UnknownHostException, IOException {
         s = new Socket(host, port);
-        //System.out.println("MySocket: client connected");
-        isodb = clients.contains(host+":"+port);
-        if (isodb) {
-            oos = new ObjectOutputStream(s.getOutputStream());
-            ois = new ObjectInputStream(s.getInputStream());
-        }
+        isodb = isClientODB(host, port);
     }
 
     public MySocket(Socket s) throws IOException {
         this.s = s;
-        isodb = servers.contains(s.getLocalPort());
-        if (isodb) {
-            oos = new ObjectOutputStream(s.getOutputStream());
-            ois = new ObjectInputStream(s.getInputStream());
-        }
+        isodb = isServerODB(s.getLocalPort());
+    }
+
+    private boolean isClientODB(String host, int port) {
+        if (Boolean.getBoolean("odb.all")) return true;
+        return clients.contains(host + ":" + port) || clients.contains(host);
+    }
+
+    private boolean isServerODB(int port) {
+        if (Boolean.getBoolean("odb.all")) return true;
+        return servers.contains(port);
     }
 
     public MyOutputStream getOutputStream() throws IOException {
-        //System.out.println("MySocket: getOutputStream");
-        return new MyOutputStream(s.getOutputStream(), isodb, oos);
+        return new MyOutputStream(s.getOutputStream(), isodb, null);
     }
 
     public MyInputStream getInputStream() throws IOException {
-        //System.out.println("MySocket: getInputStream");
-        return new MyInputStream(s.getInputStream(), isodb, ois);
+        return new MyInputStream(s.getInputStream(), isodb, null);
     }
 
     public void close() throws IOException {

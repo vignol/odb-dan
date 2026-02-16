@@ -17,12 +17,13 @@ public class MyHttpServletResponse extends HttpServletResponseWrapper {
         this.isodb = request.isODB();
         if (isodb) {
             System.out.println("MyHttpServletResponse: ODB enabled via request");
+            response.setHeader("X-ODB", "true");
         }
     }
 
     @Override
     public MyServletOutputStream getOutputStream() throws IOException {
-        return new MyServletOutputStream(new MyOutputStream(super.getOutputStream(), isodb, null));
+        return new MyServletOutputStream(new MyOutputStream(super.getOutputStream(), isodb, null, true));
     }
 
     @Override

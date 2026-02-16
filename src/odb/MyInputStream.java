@@ -11,19 +11,28 @@ public class MyInputStream {
     protected InputStream is;
     private ObjectInputStream ois;
     private boolean isodb;
+    private boolean oisEnabled;
+    private boolean skipSniff;
+    private StringBuilder sniffer = new StringBuilder();
 
     private byte[] pendingBuff;
     private int pendingOff;
     private int pendingLen;
 
     public MyInputStream(InputStream is, boolean isodb, ObjectInputStream ois) {
+        this(is, isodb, ois, false);
+    }
+
+    public MyInputStream(InputStream is, boolean isodb, ObjectInputStream ois, boolean skipSniff) {
         this.is = is;
         this.isodb = isodb;
         this.ois = ois;
+        this.skipSniff = skipSniff;
+        this.oisEnabled = (skipSniff && isodb) || (ois != null);
     }
 
     public int read() throws IOException {
-        if (isodb) {
+        if (oisEnabled) {
             if (pendingLen > 0) {
                 int b = pendingBuff[pendingOff++] & 0xFF;
                 pendingLen--;
@@ -51,14 +60,29 @@ public class MyInputStream {
                     return payload[0] & 0xFF;
                 }
             } catch (Exception e) {
-                return -1;
+                oisEnabled = false;
             }
         }
-        return is.read();
+        int b = is.read();
+        if (b != -1 && !skipSniff) {
+            if (!isodb) {
+                sniffer.append((char)b);
+                if (sniffer.toString().contains("X-ODB: true")) {
+                    isodb = true;
+                }
+                if (sniffer.length() > 2000) sniffer.delete(0, 1000);
+            }
+            if (isodb && !oisEnabled) {
+                if (sniffer.toString().endsWith("\r\n\r\n")) {
+                    oisEnabled = true;
+                }
+            }
+        }
+        return b;
     }
 
     public int read(Pair buff, int off, int len) throws IOException {
-        if (isodb) {
+        if (oisEnabled) {
             if (pendingLen > 0) {
                 int toCopy = Math.min(len, pendingLen);
                 System.arraycopy(pendingBuff, pendingOff, buff._buff, off, toCopy);
@@ -69,7 +93,6 @@ public class MyInputStream {
             }
             try {
                 if (ois == null) ois = new ObjectInputStream(is);
-                // read a descriptor
                 Object desc = ois.readObject();
                 if (desc instanceof RealDescriptor) {
                     RealDescriptor rdesc = (RealDescriptor)desc;
@@ -84,16 +107,31 @@ public class MyInputStream {
                     return toCopy;
                 } else {
                     VirtualDescriptor vdesc = (VirtualDescriptor)desc;
-                    // ODB specification: don't download yet
                     buff._desc = vdesc;
                     buff._access = false;
                     return vdesc.len;
                 }
             } catch (Exception e) {
-                return -1;
+                oisEnabled = false;
             }
-        } else
-            return is.read(buff._buff, off, len);
+        }
+        int ret = is.read(buff._buff, off, len);
+        if (ret != -1 && !skipSniff) {
+            if (!isodb) {
+                String s = new String(buff._buff, off, ret);
+                sniffer.append(s);
+                if (sniffer.toString().contains("X-ODB: true")) {
+                    isodb = true;
+                }
+                if (sniffer.length() > 2000) sniffer.delete(0, 1000);
+            }
+            if (isodb && !oisEnabled) {
+                if (sniffer.toString().contains("\r\n\r\n")) {
+                    oisEnabled = true;
+                }
+            }
+        }
+        return ret;
     }
 
     public Pair readAllBytes() throws IOException {

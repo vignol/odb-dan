@@ -5,27 +5,38 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.InetAddress;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-// We create on the server side a Downloader instance when a payload is remotely accessible 
-// on the client side, the addPayyload() static method allows to register a payload
-// on the client side, the download() static method allows to download a payload
 public class Downloader extends Thread {
 
+    private static Downloader instance;
     private volatile boolean running = true;
     private int port;
     private int index = 0;
-    private Map<Integer,byte[]> payloads = new LinkedHashMap<Integer,byte[]>(16, 0.75f, true) {
+    private Map<Integer, byte[]> payloads = Collections.synchronizedMap(new LinkedHashMap<Integer, byte[]>(16, 0.75f, true) {
         @Override
         protected boolean removeEldestEntry(Map.Entry<Integer, byte[]> eldest) {
-            return size() > 100; // Limit per-response payloads
+            return size() > 1000;
         }
-    };
+    });
     private ServerSocket ss;
 
-    public Downloader() {
+    private Downloader() {
+        super("ODB-Downloader");
+        setDaemon(true);
+    }
+
+    public static synchronized Downloader getInstance() {
+        if (instance == null) {
+            instance = new Downloader();
+            instance.start();
+            while (instance.port == 0) {
+                try { Thread.sleep(10); } catch (InterruptedException e) {}
+            }
+        }
+        return instance;
     }
 
     public int getPort() {
@@ -33,8 +44,9 @@ public class Downloader extends Thread {
     }
 
     public int addPayload(byte[] b) {
-        payloads.put(index,b);
-        return index++;
+        int id = index++;
+        payloads.put(id, b);
+        return id;
     }
 
     public void kill() {
@@ -46,11 +58,8 @@ public class Downloader extends Thread {
 
     public static String getLocalIP() {
         try {
-            // In some environments getLocalHost().getHostAddress() returns 127.0.0.1
-            // We could use a more robust way if needed, but this is a good start.
             String ip = InetAddress.getLocalHost().getHostAddress();
             if ("127.0.0.1".equals(ip) || "localhost".equals(ip)) {
-                // Try to find a non-loopback address
                 java.util.Enumeration<java.net.NetworkInterface> interfaces = java.net.NetworkInterface.getNetworkInterfaces();
                 while (interfaces.hasMoreElements()) {
                     java.net.NetworkInterface iface = interfaces.nextElement();
@@ -69,42 +78,31 @@ public class Downloader extends Thread {
     }
 
     public static byte[] download(String host, int port, int payloadid) {
-        try {
-            Socket s = new Socket(host, port);
+        try (Socket s = new Socket(host, port)) {
             ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
             ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
             oos.writeObject(payloadid);
-            byte[] ret = null;
-            try {
-                ret = (byte[])ois.readObject();
-                s.close();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                return null;
-            }
-            return ret;
+            return (byte[]) ois.readObject();
         } catch (Exception e) {
-            System.err.println("Failed to download payload " + payloadid + " from " + host + ":" + port);
-            e.printStackTrace();
+            System.err.println("Failed to download payload " + payloadid + " from " + host + ":" + port + " - " + e.getMessage());
             return null;
         }
     }
 
     public void run() {
         try {
-            ss = new ServerSocket();
-            ss.bind(null);
+            ss = new ServerSocket(0);
             this.port = ss.getLocalPort();
             while (running) {
-                Socket s = ss.accept();
-                ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
-                ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
-                int payloadid = (int)ois.readObject();
-                byte[] ret = payloads.get(payloadid);
-                oos.writeObject(ret);
-                System.out.println("Downloader: provide payload ("+(ret != null ? ret.length : "null")+") for id "+payloadid);
-                // payloads.remove(payloadid); // Keep it for subsequent requests
-                s.close();
+                try (Socket s = ss.accept()) {
+                    ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
+                    ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
+                    int payloadid = (int) ois.readObject();
+                    byte[] ret = payloads.get(payloadid);
+                    oos.writeObject(ret);
+                } catch (Exception e) {
+                    if (running) System.err.println("Downloader accept error: " + e.getMessage());
+                }
             }
         } catch (Exception e) {
             if (running) e.printStackTrace();
