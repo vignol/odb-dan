@@ -301,12 +301,11 @@ static void parseInstructions(MethodNode m) {
                 
                 if (desc != null && desc.equals("Lpack/Pair;")) {
                     // we should have on the stack : Pair
-                    // here, we should access the [B within the Pair object
-                    AbstractInsnNode last = insertCheck(m.instructions, arrayinst.inst, stack);
-                    AbstractInsnNode next = new FieldInsnNode(Opcodes.GETFIELD, "pack/Pair", "_buff", "[B");
-                    m.instructions.insert(last, next);
+                    // replace ARRAYLENGTH with INVOKEVIRTUAL pack/Pair.length()I
+                    AbstractInsnNode next = new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "pack/Pair", "length", "()I", false);
+                    m.instructions.set(inst, next);
+                    inst = next;
                     stack.handle(next);
-                    stack.handle(inst);
                 } else
                    stack.handle(inst);
             } else

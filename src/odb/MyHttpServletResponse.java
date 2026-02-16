@@ -39,4 +39,16 @@ public class MyHttpServletResponse extends HttpServletResponseWrapper {
             super.setContentLengthLong(len);
         }
     }
+
+    @Override
+    public void setHeader(String name, String value) {
+        if (isodb && "Content-Length".equalsIgnoreCase(name)) return;
+        super.setHeader(name, value);
+    }
+
+    @Override
+    public void addHeader(String name, String value) {
+        if (isodb && "Content-Length".equalsIgnoreCase(name)) return;
+        super.addHeader(name, value);
+    }
 }

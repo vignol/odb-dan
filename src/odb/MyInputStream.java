@@ -107,8 +107,10 @@ public class MyInputStream {
                     return toCopy;
                 } else {
                     VirtualDescriptor vdesc = (VirtualDescriptor)desc;
+                    // ODB specification: don't download yet
                     buff._desc = vdesc;
                     buff._access = false;
+                    buff._vlen = vdesc.len;
                     return vdesc.len;
                 }
             } catch (Exception e) {
@@ -135,6 +137,22 @@ public class MyInputStream {
     }
 
     public Pair readAllBytes() throws IOException {
+        if (oisEnabled || isodb) {
+            try {
+                if (ois == null) ois = new ObjectInputStream(is);
+                Object obj = ois.readObject();
+                if (obj instanceof RealDescriptor) {
+                     RealDescriptor rd = (RealDescriptor)obj;
+                     return new Pair(rd.buff, true, rd);
+                } else if (obj instanceof VirtualDescriptor) {
+                     VirtualDescriptor vd = (VirtualDescriptor)obj;
+                     // We create a dummy buff of the right size, but keep access=false
+                     return new Pair(new byte[0], false, vd);
+                }
+            } catch (Exception e) {
+                // fallback
+            }
+        }
         byte[] bytes = is.readAllBytes();
         return Pair.wrap(bytes);
     }

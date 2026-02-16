@@ -28,9 +28,16 @@ public class MyOutputStream {
         this.oisEnabled = (skipSniff && isodb);
     }
 
+    private void ensureOOS() throws IOException {
+        if (oos == null) {
+            oos = new ObjectOutputStream(os);
+            oos.flush();
+        }
+    }
+
     public void write(int b) throws IOException {
         if (oisEnabled) {
-            if (oos == null) oos = new ObjectOutputStream(os);
+            ensureOOS();
             oos.writeObject(new RealDescriptor(b));
         } else {
             os.write(b);
@@ -49,42 +56,42 @@ public class MyOutputStream {
 
     public void write(Pair buff, int off, int len) throws IOException {
         if (len > 0) {
-            if (!buff._access) {
-                VirtualDescriptor desc = (VirtualDescriptor)buff._desc;
-                if (oisEnabled && (off == 0) && (len == desc.len)) {
-                    // send virtual (forwarding)
-                    System.out.println("MyOutputStream: forward descriptor ("+desc.len+")");
-                    if (oos == null) oos = new ObjectOutputStream(os);
-                    oos.writeObject(desc);
-                    return;
-                } else {
-                    // download the payload
-                    System.out.println("MyOutputStream: download payload ("+desc.len+") from " + desc.host + ":" + desc.port);
-                    byte[] ret = Downloader.download(desc.host, desc.port, desc.payloadid);
-                    buff._buff = ret;
-                    buff._access = true;
-                }
-            }
             if (oisEnabled) {
-                if (oos == null) oos = new ObjectOutputStream(os);
+                if (!buff._access) {
+                    VirtualDescriptor desc = (VirtualDescriptor)buff._desc;
+                    if ((off == 0) && (len == desc.length())) {
+                        ensureOOS();
+                        oos.writeObject(desc);
+                        oos.flush();
+                        return;
+                    } else {
+                        byte[] ret = Downloader.download(desc.host, desc.port, desc.payloadid);
+                        buff._buff = ret;
+                        buff._access = true;
+                    }
+                }
+                ensureOOS();
                 if (len > pagesize) {
-                    // send virtual
                     byte[] b = new byte[len];
                     System.arraycopy(buff._buff, off, b, 0, len);
                     Downloader d = Downloader.getInstance();
                     int id = d.addPayload(b);
                     String ip = Downloader.getLocalIP();
                     VirtualDescriptor desc = new VirtualDescriptor(ip, d.getPort(), id, len);
-                    System.out.println("MyOutputStream: virtualize local data ("+len+") at " + ip + ":" + d.getPort());
                     oos.writeObject(desc);
                 } else {
-                    // send real
-                    System.out.println("MyOutputStream: send real data ("+len+")");
                     byte[] b = new byte[len];
                     System.arraycopy(buff._buff, off, b, 0, len);
                     oos.writeObject(new RealDescriptor(len, b));
                 }
+                oos.flush();
             } else {
+                if (!buff._access) {
+                    VirtualDescriptor desc = (VirtualDescriptor)buff._desc;
+                    byte[] ret = Downloader.download(desc.host, desc.port, desc.payloadid);
+                    buff._buff = ret;
+                    buff._access = true;
+                }
                 os.write(buff._buff, off, len);
                 if (!skipSniff) {
                     if (!isodb) {
@@ -102,11 +109,7 @@ public class MyOutputStream {
     }
 
     public void write(Pair buff) throws IOException {
-        if (!buff._access) {
-            VirtualDescriptor desc = (VirtualDescriptor)buff._desc;
-            write(buff, 0, desc.len);
-        } else
-            write(buff, 0, buff._buff.length);
+        write(buff, 0, buff.length());
     }
 
     public void flush() throws IOException {
