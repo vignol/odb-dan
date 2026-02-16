@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ASM_HOME=$HOME/Downloads/asm-master
-ASM_JARS=$ASM_HOME/asm/build/libs/asm-9.10-SNAPSHOT.jar:$ASM_HOME/asm-analysis/build/libs/asm-analysis-9.10-SNAPSHOT.jar:$ASM_HOME/asm-commons/build/libs/asm-commons-9.10-SNAPSHOT.jar:$ASM_HOME/asm-tree/build/libs/asm-tree-9.10-SNAPSHOT.jar:$ASM_HOME/asm-util/build/libs/asm-util-9.10-SNAPSHOT.jar
+ASM_JARS=/opt/android-sdk/cmdline-tools/latest/lib/external/org/ow2/asm/asm/9.7/asm-9.7.jar:/opt/android-sdk/cmdline-tools/latest/lib/external/org/ow2/asm/asm-analysis/9.7/asm-analysis-9.7.jar:/opt/android-sdk/cmdline-tools/latest/lib/external/org/ow2/asm/asm-commons/9.7/asm-commons-9.7.jar:/opt/android-sdk/cmdline-tools/latest/lib/external/org/ow2/asm/asm-tree/9.7/asm-tree-9.7.jar:
 PROJECT_HOME=$(pwd)
 
 cd $PROJECT_HOME/bin

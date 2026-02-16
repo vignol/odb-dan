@@ -17,21 +17,16 @@ public class MyOutputStream {
     public MyOutputStream(OutputStream os, boolean isodb, ObjectOutputStream oos) {
         this.os = os;
         this.isodb = isodb;
+        this.oos = oos;
         if (isodb) {
-            try {
-                this.oos = new ObjectOutputStream(os);
-                d = new Downloader();
-                d.start();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
-            this.oos = oos;
+            d = new Downloader();
+            d.start();
         }
     }
 
     public void write(int b) throws IOException {
         if (isodb) {
+            if (oos == null) oos = new ObjectOutputStream(os);
             oos.writeObject(new RealDescriptor(b));
         } else {
             os.write(b);
@@ -43,27 +38,30 @@ public class MyOutputStream {
         if (!buff._access) {
             VirtualDescriptor desc = (VirtualDescriptor)buff._desc;
             if ((off==0) && (len==desc.len) && isodb) {
-                // send virtual
-                System.out.println("MyOutputStream.write: virtual remote ("+desc.len+")");
+                // send virtual (forwarding)
+                System.out.println("MyOutputStream.write: virtual remote (forwarding "+desc.len+")");
+                if (oos == null) oos = new ObjectOutputStream(os);
                 oos.writeObject(desc);
                 return;
             } else {
                 // download the payload
                 System.out.println("MyOutputStream.write: download payload ("+desc.len+")");
-                buff._access = true;
                 byte[] ret = Downloader.download(desc.host, desc.port, desc.payloadid);
-                System.arraycopy(ret, 0, buff._buff, 0, ret.length);
+                buff._buff = ret;
+                buff._access = true;
                 // will send the payload below
             }
         }
         if (isodb) {
+            if (oos == null) oos = new ObjectOutputStream(os);
             if (len > pagesize) {
                 // send virtual
                 byte[] b = new byte[len];
                 System.arraycopy(buff._buff, off, b, 0, len);
                 int id = d.addPayload(b);
-                VirtualDescriptor desc = new VirtualDescriptor("localhost", d.getPort(), id, len);
-                System.out.println("MyOutputStream.write: virtual local ("+desc.len+")");
+                String ip = Downloader.getLocalIP();
+                VirtualDescriptor desc = new VirtualDescriptor(ip, d.getPort(), id, len);
+                System.out.println("MyOutputStream.write: virtual local ("+desc.len+") at "+ip+":"+d.getPort());
                 oos.writeObject(desc);
             } else {
                 System.out.println("MyOutputStream.write: real ("+len+")");
@@ -86,10 +84,12 @@ public class MyOutputStream {
     }
 
     public void flush() throws IOException {
+        if (oos != null) oos.flush();
         os.flush();
     }
 
     public void close() throws IOException {
+        if (oos != null) oos.close();
         os.close();
         if (d != null) {
             d.kill();

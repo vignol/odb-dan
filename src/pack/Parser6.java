@@ -177,11 +177,12 @@ static void parseInstructions(MethodNode m) {
         // Overwrite the original 'request' variable in slot 1
         insert.add(new VarInsnNode(Opcodes.ASTORE, 1));
 
-        // new MyHttpServletResponse(response)
+        // new MyHttpServletResponse(response, request)
         insert.add(new TypeInsnNode(Opcodes.NEW, "odb/MyHttpServletResponse"));
         insert.add(new InsnNode(Opcodes.DUP));
         insert.add(new VarInsnNode(Opcodes.ALOAD, 2)); // load original response
-        insert.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "odb/MyHttpServletResponse", "<init>", "(Ljakarta/servlet/http/HttpServletResponse;)V", false));
+        insert.add(new VarInsnNode(Opcodes.ALOAD, 1)); // load wrapped request
+        insert.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "odb/MyHttpServletResponse", "<init>", "(Ljakarta/servlet/http/HttpServletResponse;Lodb/MyHttpServletRequest;)V", false));
         // Overwrite the original 'response' variable in slot 2
         insert.add(new VarInsnNode(Opcodes.ASTORE, 2));
 
@@ -413,29 +414,8 @@ static void parseInstructions(MethodNode m) {
             }
             stack.handle(inst);
 if (op == Opcodes.CHECKCAST && inst1.desc.equals("[B")) {
-    System.out.println("Insertion de Pair après CHECKCAST [B]");
-    
-    AbstractInsnNode next = new TypeInsnNode(Opcodes.NEW, "pack/Pair");
-    m.instructions.insert(inst, next);
-    inst = next;
-    stack.handle(next);
-    
-    next = new InsnNode(Opcodes.DUP_X1);
-    m.instructions.insert(inst, next);
-    inst = next;
-    stack.handle(next);
-    
-    next = new InsnNode(Opcodes.SWAP);
-    m.instructions.insert(inst, next);
-    inst = next;
-    stack.handle(next);
-    
-    next = new InsnNode(Opcodes.ICONST_1);
-    m.instructions.insert(inst, next);
-    inst = next;
-    stack.handle(next);
-    
-    next = new MethodInsnNode(Opcodes.INVOKESPECIAL, "pack/Pair", "<init>", "([BZ)V", false);
+    System.out.println("Insertion de Pair.wrap après CHECKCAST [B]");
+    AbstractInsnNode next = new MethodInsnNode(Opcodes.INVOKESTATIC, "pack/Pair", "wrap", "([B)Lpack/Pair;", false);
     m.instructions.insert(inst, next);
     inst = next;
     stack.handle(next);
@@ -457,6 +437,16 @@ if (op == Opcodes.CHECKCAST && inst1.desc.equals("[B")) {
                 meth = new Method(methname, methdesc);
                 System.out.println("instruction INVOKE ["+methowner+"."+methname+"]");
                 String newdesc = parseMethodDesc(methname, methdesc, true);
+
+                if (methowner.equals("java/net/http/HttpRequest$Builder") && methname.equals("build")) {
+                    System.out.println("Intercepting HttpRequest.Builder.build() to add X-ODB header");
+                    InsnList inject = new InsnList();
+                    inject.add(new LdcInsnNode("X-ODB"));
+                    inject.add(new LdcInsnNode("true"));
+                    inject.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/net/http/HttpRequest$Builder", "header", "(Ljava/lang/String;Ljava/lang/String;)Ljava/net/http/HttpRequest$Builder;", true));
+                    m.instructions.insertBefore(inst, inject);
+                }
+
                 // translate types in method signatures only within the application
                 if ((methowner.startsWith("app/"))) {
                     methodinst.desc = newdesc;
@@ -511,35 +501,11 @@ if (outside) {
         AbstractInsnNode next;
         
         if (retdesc.equals("[B")) {
-            // Wrap [B → Pair
-            next = new TypeInsnNode(Opcodes.NEW, "pack/Pair");
+            // Wrap [B → Pair using wrap
+            next = new MethodInsnNode(Opcodes.INVOKESTATIC, "pack/Pair", "wrap", "([B)Lpack/Pair;", false);
             m.instructions.insert(inst, next);
             inst = next;
-            System.out.println("add : NEW Pair");
-            stack.handle(inst);
-            
-            next = new InsnNode(Opcodes.DUP_X1);
-            m.instructions.insert(inst, next);
-            inst = next;
-            System.out.println("add : DUP_X1");
-            stack.handle(inst);
-            
-            next = new InsnNode(Opcodes.SWAP);
-            m.instructions.insert(inst, next);
-            inst = next;
-            System.out.println("add : SWAP");
-            stack.handle(inst);
-            
-            next = new InsnNode(Opcodes.ICONST_1);
-            m.instructions.insert(inst, next);
-            inst = next;
-            System.out.println("add : ICONST_1");
-            stack.handle(inst);
-            
-            next = new MethodInsnNode(Opcodes.INVOKESPECIAL, "pack/Pair", "<init>", "([BZ)V", false);
-            m.instructions.insert(inst, next);
-            inst = next;
-            System.out.println("add : INVOKESPECIAL Pair.<init>");
+            System.out.println("add : INVOKESTATIC Pair.wrap");
             stack.handle(inst);
         } 
         else if (retdesc.equals("Ljava/io/InputStream;")) {
@@ -766,8 +732,7 @@ static AbstractInsnNode wrapServletStream(MethodNode m, AbstractInsnNode inst,
 
 
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-            org.objectweb.asm.util.CheckClassAdapter ca = new org.objectweb.asm.util.CheckClassAdapter(cw);
-            cn.accept(ca);
+            cn.accept(cw);
             byte[] b = cw.toByteArray();
 
             // Optional: To see the verification errors right away
