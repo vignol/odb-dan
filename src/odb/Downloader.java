@@ -58,8 +58,13 @@ public class Downloader extends Thread {
 
     public static String getLocalIP() {
         try {
-            String ip = InetAddress.getLocalHost().getHostAddress();
-            if ("127.0.0.1".equals(ip) || "localhost".equals(ip)) {
+            // Priority to a property if provided
+            String preferredIP = System.getProperty("odb.localip");
+            if (preferredIP != null) return preferredIP;
+
+            InetAddress local = InetAddress.getLocalHost();
+            String ip = local.getHostAddress();
+            if ("127.0.0.1".equals(ip) || "localhost".equals(ip) || local.isLoopbackAddress()) {
                 java.util.Enumeration<java.net.NetworkInterface> interfaces = java.net.NetworkInterface.getNetworkInterfaces();
                 while (interfaces.hasMoreElements()) {
                     java.net.NetworkInterface iface = interfaces.nextElement();
@@ -84,24 +89,29 @@ public class Downloader extends Thread {
             oos.writeObject(payloadid);
             return (byte[]) ois.readObject();
         } catch (Exception e) {
-            System.err.println("Failed to download payload " + payloadid + " from " + host + ":" + port + " - " + e.getMessage());
+            System.err.println("ODB: Failed to download payload " + payloadid + " from " + host + ":" + port + " - " + e.getMessage());
             return null;
         }
     }
 
     public void run() {
         try {
-            ss = new ServerSocket(0);
+            int preferredPort = Integer.getInteger("odb.servers", 0);
+            ss = new ServerSocket(preferredPort);
             this.port = ss.getLocalPort();
+            System.out.println("ODB: Downloader listening on " + getLocalIP() + ":" + this.port);
             while (running) {
                 try (Socket s = ss.accept()) {
                     ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
                     ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
-                    int payloadid = (int) ois.readObject();
-                    byte[] ret = payloads.get(payloadid);
-                    oos.writeObject(ret);
+                    Object obj = ois.readObject();
+                    if (obj instanceof Integer) {
+                        int payloadid = (Integer) obj;
+                        byte[] ret = payloads.get(payloadid);
+                        oos.writeObject(ret);
+                    }
                 } catch (Exception e) {
-                    if (running) System.err.println("Downloader accept error: " + e.getMessage());
+                    if (running) System.err.println("ODB: Downloader accept error: " + e.getMessage());
                 }
             }
         } catch (Exception e) {
