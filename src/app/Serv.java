@@ -33,7 +33,11 @@ public class Serv extends HttpServlet {
             return;
         }
 
-        String url = "http://"+machine+":8080/serv/Serv?image="+image;
+       // On récupère dynamiquement le nom du contexte actuel (ex: "/serv2")
+        String contextPath = request.getContextPath(); 
+
+        // On construit l'URL en utilisant ce même contexte sur la machine cible
+        String url = "http://" + machine + ":8080" + contextPath + "/Serv?image=" + image;
         HttpRequest req = HttpRequest.newBuilder()
         .uri(URI.create(url))
         .GET()
