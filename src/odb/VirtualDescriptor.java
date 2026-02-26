@@ -15,4 +15,8 @@ public class VirtualDescriptor implements Serializable {
         this.payloadid = payloadid;
         this.len = len;
     }
+
+    public int length() {
+        return len;
+    }
 }

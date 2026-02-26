@@ -36,4 +36,8 @@ public MyServletOutputStream(jakarta.servlet.ServletOutputStream sos) {
     public void write(pack.Pair p) throws IOException {
         mos.write(p);
     }
+
+    public void write(pack.Pair p, int off, int len) throws IOException {
+        mos.write(p, off, len);
+    }
 }

@@ -2,16 +2,26 @@ package odb;
 import java.io.IOException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
-import jakarta.servlet.ServletContext;
-import jakarta.servlet.ServletContext;
+
 public class MyHttpServletRequest extends HttpServletRequestWrapper {
     
-public MyHttpServletRequest(HttpServletRequest request) {
-super(request);
-}
-@Override
-public jakarta.servlet.ServletInputStream getInputStream() throws IOException {
-// Fournir MyServletInputStream basé sur MyInputStream
-return new MyServletInputStream(new MyInputStream(super.getInputStream(), false, null));  // Changé à false
-}
+    private boolean isodb = false;
+
+    public MyHttpServletRequest(HttpServletRequest request) {
+        super(request);
+        String odbHeader = request.getHeader("X-ODB");
+        if ("true".equals(odbHeader)) {
+            this.isodb = true;
+            System.out.println("MyHttpServletRequest: ODB enabled via header");
+        }
+    }
+
+    public boolean isODB() {
+        return isodb;
+    }
+
+    @Override
+    public jakarta.servlet.ServletInputStream getInputStream() throws IOException {
+        return new MyServletInputStream(new MyInputStream(super.getInputStream(), isodb, null, true));
+    }
 }

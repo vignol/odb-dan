@@ -17,47 +17,31 @@ import org.objectweb.asm.tree.TypeInsnNode;
 public class InstructionStack extends Stack<StackInst> {
 
     public StackInst pop1() {
+        if (isEmpty()) throw new RuntimeException("Stack empty when pop1 expected");
         if (peek() instanceof OneSlotInst) return pop();
         else {
-            System.out.println("inconsistent stack state");
-            System.exit(0);
-            return null;
+            throw new RuntimeException("inconsistent stack state: expected OneSlotInst but got " + peek().getClass().getSimpleName());
         }
     }
     public StackInst pop2() {
+        if (isEmpty()) throw new RuntimeException("Stack empty when pop2 expected");
         if (peek() instanceof TwoSlotInst) return pop();
         else {
-            System.out.println("inconsistent stack state");
-            System.exit(0);
-            return null;
+            throw new RuntimeException("inconsistent stack state: expected TwoSlotInst but got " + peek().getClass().getSimpleName());
         }
     }
 
     public void handle(AbstractInsnNode inst) {
+
+        if (inst.getOpcode() == -1) return;
 
         StackInst v1,v2,v3,v4;
 
         switch (inst.getOpcode()) {
             // --- Constants ---
             case Opcodes.CHECKCAST:
-                TypeInsnNode castInst = (TypeInsnNode) inst;
-                String castType = castInst.desc;
-                System.out.println("Handling CHECKCAST to " + castType);
-                StackInst top = pop1(); // Pop the object to be cast
-                if ("[B".equals(castType)) {
-                    // Cast to byte[], push as OneSlotInst
-                    push(new OneSlotInst(inst));
-                } else if ("Lpack/Pair;".equals(castType)) {
-                    // Cast to Pair, handle ODB if needed
-                    System.out.println("CHECKCAST to Pair detected, potential ODB handling");
-                    push(new OneSlotInst(inst)); // Preserve as OneSlotInst
-                } else if (castType.startsWith("Lodb/")) {
-                    // Cast to ODB types (e.g., MyHttpServletRequest)
-                    push(new OneSlotInst(inst));
-                } else {
-                    // Default case: preserve the cast
-                    push(new OneSlotInst(inst));
-                }
+                pop1(); // Pop the object to be cast
+                push(new OneSlotInst(inst));
                 break;
             case Opcodes.NOP:
                 break; 
@@ -391,7 +375,9 @@ public class InstructionStack extends Stack<StackInst> {
                 } else pop2();
                 break;
             case Opcodes.DUP:
-                if (!(peek() instanceof OneSlotInst)) {System.out.println("inconsistent DUP");System.exit(0);}
+                if (!(peek() instanceof OneSlotInst)) {
+                    throw new RuntimeException("inconsistent DUP: expected OneSlotInst");
+                }
                 push(peek());
                 break; 
             case Opcodes.DUP2:
@@ -404,7 +390,9 @@ public class InstructionStack extends Stack<StackInst> {
                 break; 
             case Opcodes.DUP_X1:
                 v1=pop1();v2=pop1();
-                if ((v1 instanceof TwoSlotInst) || (v2 instanceof TwoSlotInst)) {System.out.println("inconsistent DUP");System.exit(0);}
+                if ((v1 instanceof TwoSlotInst) || (v2 instanceof TwoSlotInst)) {
+                    throw new RuntimeException("inconsistent DUP_X1: unexpected TwoSlotInst");
+                }
                 push(v1);push(v2);push(v1);
                 break;
             case Opcodes.DUP_X2:
@@ -422,8 +410,7 @@ public class InstructionStack extends Stack<StackInst> {
                 push(v2);push(v1);push(v3);push(v2);push(v1);
                 break; 
             case Opcodes.DUP2_X2:
-                v1=pop1();v2=pop1();
-                v3=pop();v4=pop();
+                v1=pop1();v2=pop1();v3=pop();v4=pop();
                 push(v2);push(v1);push(v4);push(v3);push(v2);push(v1);
                 break; 
             case Opcodes.SWAP:
@@ -452,10 +439,8 @@ public class InstructionStack extends Stack<StackInst> {
                 break;
                 
             default:
-                System.out.println("Opcode non supporté : " + Util.getOpcodeName(inst.getOpcode()));
-                System.exit(0);
+                throw new RuntimeException("Opcode non supporté : " + Util.getOpcodeName(inst.getOpcode()) + " (" + inst.getOpcode() + ")");
         }
-        //System.out.println("stack size: "+size());
     }
 
 }

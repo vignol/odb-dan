@@ -13,6 +13,7 @@ import java.util.Stack;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.Method;
@@ -73,9 +74,9 @@ public class Parser6 {
     static List<FieldNode> parseFields(List<FieldNode> fields) {
         List<FieldNode> lf = new ArrayList<FieldNode>();
         for (FieldNode f : fields) {
+            f.signature = null; // Clear generics signature as types are changing
             String desttype = typeTranslation.get(f.desc);
             if (desttype != null) {
-                System.out.println("FIELD: name: "+f.name+"  type: "+f.desc);
                 lf.add(new FieldNode(f.access, f.name, desttype, null, null));
             } else
                 lf.add(f);
@@ -90,7 +91,6 @@ public class Parser6 {
 
 static String parseMethodDesc(String name, String desc, boolean trace) {
     if (name.equals("doGet") || name.equals("doPost")) {
-        if (trace) System.out.println("METHOD ("+name+"): skipping signature translation for servlet method");
         return desc;  // NE PAS transformer la signature
     }
     String desttype;
@@ -98,7 +98,6 @@ static String parseMethodDesc(String name, String desc, boolean trace) {
     Type ret = meth.getReturnType();
     desttype = typeTranslation.get(ret.getDescriptor());
     if (desttype != null) {
-        if (trace) System.out.println("METHOD ("+name+"): result "+ret);
         ret = Type.getType(desttype);
     }
     int i=0;
@@ -107,13 +106,12 @@ static String parseMethodDesc(String name, String desc, boolean trace) {
     for (Type t : args) {
         desttype = typeTranslation.get(t.getDescriptor());
         if (desttype != null) {
-            if (trace) System.out.println("METHOD ("+name+"): arg["+i+"]["+t.getDescriptor()+"]");
             newargs.add(Type.getType(desttype));
         } else
             newargs.add(t);
         i++;
     }
-    meth = new Method(name,ret,newargs.toArray(args));
+    meth = new Method(name,ret,newargs.toArray(new Type[0]));
     return meth.getDescriptor();
 }
 
@@ -130,7 +128,6 @@ static void parseLocalVariables(MethodNode m) {
     for (LocalVariableNode lv : list) {
         String desttype = typeTranslation.get(lv.desc);
         if (desttype != null) {
-            System.out.println("METHOD ("+m.name+"): local var name: "+lv.name+" index: "+lv.index+" size: "+Type.getType(lv.desc).getSize());
             newlist.add(new LocalVariableNode(lv.name, desttype, null, lv.start, lv.end, lv.index));
         } else {
             // For doGet/doPost, update the type of the original request and response variables
@@ -177,11 +174,12 @@ static void parseInstructions(MethodNode m) {
         // Overwrite the original 'request' variable in slot 1
         insert.add(new VarInsnNode(Opcodes.ASTORE, 1));
 
-        // new MyHttpServletResponse(response)
+        // new MyHttpServletResponse(response, request)
         insert.add(new TypeInsnNode(Opcodes.NEW, "odb/MyHttpServletResponse"));
         insert.add(new InsnNode(Opcodes.DUP));
         insert.add(new VarInsnNode(Opcodes.ALOAD, 2)); // load original response
-        insert.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "odb/MyHttpServletResponse", "<init>", "(Ljakarta/servlet/http/HttpServletResponse;)V", false));
+        insert.add(new VarInsnNode(Opcodes.ALOAD, 1)); // load wrapped request
+        insert.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "odb/MyHttpServletResponse", "<init>", "(Ljakarta/servlet/http/HttpServletResponse;Lodb/MyHttpServletRequest;)V", false));
         // Overwrite the original 'response' variable in slot 2
         insert.add(new VarInsnNode(Opcodes.ASTORE, 2));
 
@@ -189,7 +187,6 @@ static void parseInstructions(MethodNode m) {
     }
 
     AbstractInsnNode firstinst = instructions.getFirst();
-    System.out.println("parseBranch : "+ m.instructions.indexOf(firstinst));
     parseBranch(m, firstinst, visited, stack);
 }
 
@@ -203,8 +200,6 @@ static void parseInstructions(MethodNode m) {
         List<Integer> returnopcodes = Arrays.asList(Opcodes.IRETURN, Opcodes.LRETURN, Opcodes.FRETURN, Opcodes.DRETURN, Opcodes.ARETURN, Opcodes.RETURN);
 
         if (inst == null || visited.contains(inst)) {
-            System.out.println("end of branch");
-            System.out.println();
             return;
         }
 
@@ -217,22 +212,16 @@ static void parseInstructions(MethodNode m) {
         if (inst instanceof JumpInsnNode) {
             JumpInsnNode jumpInsn = (JumpInsnNode) inst;
             int nb = brnb++;
-            System.out.println("################# BEGIN Branch (jump)"+nb);
             parseBranch(m, jumpInsn.label, visited, (InstructionStack)stack.clone());
-            System.out.println("################# END Branch (jump)"+nb);
             if (inst.getOpcode() != Opcodes.GOTO) {
-                System.out.println("################# BEGIN Branch (jump/continue)"+nb);
                 parseBranch(m, last.getNext(), visited, stack);
-                System.out.println("################# END Branch (jump/continue)"+nb);
             }
 
         } else 
             if (inst instanceof TableSwitchInsnNode) {
                 TableSwitchInsnNode switchInsn = (TableSwitchInsnNode) inst;
                 for (LabelNode label : switchInsn.labels) {
-                    System.out.println("################# BEGIN Branch (tableswitch)");
                     parseBranch(m, label, visited, (InstructionStack)stack.clone());
-                    System.out.println("################# END Branch (tableswitch)");
 
                 }
                 parseBranch(m, switchInsn.dflt, visited, stack);
@@ -240,14 +229,10 @@ static void parseInstructions(MethodNode m) {
                 if (inst instanceof LookupSwitchInsnNode) {
                     LookupSwitchInsnNode lookupInsn = (LookupSwitchInsnNode) inst;
                     for (LabelNode label : lookupInsn.labels) {
-                        System.out.println("################# BEGIN Branch (lookupswitch)");
                         parseBranch(m, label, visited, (InstructionStack)stack.clone());
-                        System.out.println("################# END Branch (lookupswitch)");
 
                     }
-                    System.out.println("################# BEGIN Branch (lookupswitch/default)");
                     parseBranch(m, lookupInsn.dflt, visited, stack);
-                    System.out.println("################# END Branch (lookupswitch/default)");
 
                 } else {
                     if (returnopcodes.contains(inst.getOpcode())) return;
@@ -261,10 +246,9 @@ static void parseInstructions(MethodNode m) {
     /// rely on the typeTranslation and classTranslation tables above
     /// returns the last handled inst
     static AbstractInsnNode handleInstruction(MethodNode m, AbstractInsnNode inst, InstructionStack stack) {
-
-        System.out.println("handleInstruction : "+ m.instructions.indexOf(inst)+" "+Util.getOpcodeName(inst.getOpcode()));
         
         int op = inst.getOpcode();
+        if (op == -1) return inst;
 
         // ALOAD / ASTORE
         // nothing
@@ -274,16 +258,7 @@ static void parseInstructions(MethodNode m) {
             FieldInsnNode fieldinst = (FieldInsnNode)inst;
             String desttype = typeTranslation.get(fieldinst.desc);
             if (desttype != null) {
-                if ((op == Opcodes.GETSTATIC) || (op == Opcodes.GETFIELD)) {
-                    System.out.println("instruction "+Util.getOpcodeName(op)+" ["+fieldinst.name+"][[B]");
-                    // replace the instruction with one with the (type to adapt) type
-                    fieldinst.desc = desttype;
-                }
-                if ((op == Opcodes.PUTSTATIC) || (op == Opcodes.PUTFIELD)) {
-                    System.out.println("instruction "+Util.getOpcodeName(op)+" ["+fieldinst.name+"][[B]");
-                    // replace the instruction with one with the (type to adapt) type
-                    fieldinst.desc = desttype;
-                }
+                fieldinst.desc = desttype;
             }
             stack.handle(inst);
         }
@@ -293,7 +268,6 @@ static void parseInstructions(MethodNode m) {
         if (inst instanceof InsnNode) {
             //InsnNode inst1 = (InsnNode)inst;
             if (op == Opcodes.BALOAD) {
-                System.out.println("instruction BALOAD [B]");
                 // we should have on the stack : Pair then index
                 // here, we should insert check and access the [B within the Pair object
                 StackInst indexinst = stack.pop1();
@@ -302,13 +276,11 @@ static void parseInstructions(MethodNode m) {
                 AbstractInsnNode last = insertCheck(m.instructions, pairinst.inst, stack);
                 AbstractInsnNode next = new FieldInsnNode(Opcodes.GETFIELD, "pack/Pair", "_buff", "[B");
                 m.instructions.insert(last, next);
-                System.out.println("add : GETFIELD");
                 stack.handle(next);
                 stack.push(indexinst);
                 stack.handle(inst);
             } else
             if (op == Opcodes.BASTORE) {
-                System.out.println("instruction BASTORE [B]");
                 // we should have on the stack : Pair then index then value
                 // here, we should insert check and access the [B within the Pair object
                 StackInst valueinst = stack.pop1();
@@ -318,37 +290,26 @@ static void parseInstructions(MethodNode m) {
                 AbstractInsnNode last = insertCheck(m.instructions, pairinst.inst, stack);
                 AbstractInsnNode next = new FieldInsnNode(Opcodes.GETFIELD, "pack/Pair", "_buff", "[B");
                 m.instructions.insert(last, next);
-                System.out.println("add : GETFIELD");
                 stack.handle(next);
                 stack.push(indexinst);
                 stack.push(valueinst);
                 stack.handle(inst);
             } else
             if (op == Opcodes.ARRAYLENGTH) {
-                System.out.println("instruction ARRAYLENGTH");
                 StackInst arrayinst = stack.peek();
                 String desc = Util.getADesc(m, stack);
-                if (desc == null) {System.err.println("getADesc: inconsistent type");System.exit(0);}
                 
-                if (desc.equals("Lpack/Pair;")) {
+                if (desc != null && desc.equals("Lpack/Pair;")) {
                     // we should have on the stack : Pair
-                    // here, we should access the [B within the Pair object
-                    AbstractInsnNode next = new FieldInsnNode(Opcodes.GETFIELD, "pack/Pair", "_buff", "[B");
-                    m.instructions.insert(arrayinst.inst, next);
+                    // replace ARRAYLENGTH with INVOKEVIRTUAL pack/Pair.length()I
+                    AbstractInsnNode next = new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "pack/Pair", "length", "()I", false);
+                    m.instructions.set(inst, next);
+                    inst = next;
                     stack.handle(next);
-                    System.out.println("add : GETFIELD");
-                    stack.handle(inst);
-                }
-                // else this is not a [B array
+                } else
+                   stack.handle(inst);
             } else
             if (op == Opcodes.ARETURN) {
-                String srctype = new Method(m.name,m.desc).getReturnType().getDescriptor();
-                String desttype = typeTranslation.get(srctype);
-                if (desttype != null) {
-                    System.out.println("instruction ARETURN "+srctype);
-                    // we should have on the stack : Pair
-                    // don't have to do anything
-                }
                 stack.handle(inst);
             } else
                 stack.handle(inst);
@@ -360,40 +321,31 @@ static void parseInstructions(MethodNode m) {
             IntInsnNode inst1 = (IntInsnNode)inst;
             if (op == Opcodes.NEWARRAY) {
                 if (inst1.operand == 8) {
-                    System.out.println("instruction new array [B]");
-                    // here, we should have on the stack : size
-                    // after NEWARRAY, we have : [B
-                    // we should create a Pair and push on the stack : Pair then Pair then [B then 1
                     AbstractInsnNode next;
                     stack.handle(inst);
                     next = new TypeInsnNode(Opcodes.NEW, "pack/Pair");
                     m.instructions.insert(inst, next); 
                     inst = next;
-                    System.out.println("add : NEW");
                     stack.handle(inst);
                     // here we have : [B then Pair
                     next = new InsnNode(Opcodes.DUP_X1);
                     m.instructions.insert(inst, next);
                     inst = next;
-                    System.out.println("add : DUP_X1");
                     stack.handle(inst);
                     // here we have : Pair then [B then Pair
                     next = new InsnNode(Opcodes.SWAP);
                     m.instructions.insert(inst, next);
                     inst = next;
-                    System.out.println("add : SWAP");
                     stack.handle(inst);
                     // here we have : Pair then Pair then [B
                     next = new InsnNode(Opcodes.ICONST_1);
                     m.instructions.insert(inst, next);
                     inst = next;
-                    System.out.println("add : ICONST_1");
                     stack.handle(inst);
                     // here we have : Pair then Pair then [B then 1
                     next = new MethodInsnNode(Opcodes.INVOKESPECIAL, "pack/Pair", "<init>", "([BZ)V", false);
                     m.instructions.insert(inst, next);
                     inst = next;
-                    System.out.println("add : INVOKESPECIAL");
                     stack.handle(inst);
 
                     // here we have : Pair
@@ -412,41 +364,18 @@ static void parseInstructions(MethodNode m) {
                     inst1.desc = destclass;
             }
             stack.handle(inst);
-if (op == Opcodes.CHECKCAST && inst1.desc.equals("[B")) {
-    System.out.println("Insertion de Pair après CHECKCAST [B]");
-    
-    AbstractInsnNode next = new TypeInsnNode(Opcodes.NEW, "pack/Pair");
-    m.instructions.insert(inst, next);
-    inst = next;
-    stack.handle(next);
-    
-    next = new InsnNode(Opcodes.DUP_X1);
-    m.instructions.insert(inst, next);
-    inst = next;
-    stack.handle(next);
-    
-    next = new InsnNode(Opcodes.SWAP);
-    m.instructions.insert(inst, next);
-    inst = next;
-    stack.handle(next);
-    
-    next = new InsnNode(Opcodes.ICONST_1);
-    m.instructions.insert(inst, next);
-    inst = next;
-    stack.handle(next);
-    
-    next = new MethodInsnNode(Opcodes.INVOKESPECIAL, "pack/Pair", "<init>", "([BZ)V", false);
-    m.instructions.insert(inst, next);
-    inst = next;
-    stack.handle(next);
-}
+            if (op == Opcodes.CHECKCAST && inst1.desc.equals("[B")) {
+                AbstractInsnNode next = new MethodInsnNode(Opcodes.INVOKESTATIC, "pack/Pair", "wrap", "([B)Lpack/Pair;", false);
+                m.instructions.insert(inst, next);
+                inst = next;
+                stack.handle(next);
+            }
         }
         else
          
         // INVOKEVIRTUAL / INVOKESPECIAL / INVOKESTATIC / INVOKEINTERFACE
         if ((inst instanceof MethodInsnNode) || (inst instanceof InvokeDynamicInsnNode)) {
             boolean outside = true;
-            // outside means I should translate Pair back into [B for outside calls
             String methname = null, methdesc = null, methowner = null;
             Method meth = null;
             if (inst instanceof MethodInsnNode) {
@@ -455,8 +384,16 @@ if (op == Opcodes.CHECKCAST && inst1.desc.equals("[B")) {
                 methdesc = methodinst.desc;
                 methowner = methodinst.owner;
                 meth = new Method(methname, methdesc);
-                System.out.println("instruction INVOKE ["+methowner+"."+methname+"]");
-                String newdesc = parseMethodDesc(methname, methdesc, true);
+                String newdesc = parseMethodDesc(methname, methdesc, false);
+
+                if (methowner.equals("java/net/http/HttpRequest$Builder") && methname.equals("build")) {
+                    InsnList inject = new InsnList();
+                    inject.add(new LdcInsnNode("X-ODB"));
+                    inject.add(new LdcInsnNode("true"));
+                    inject.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/net/http/HttpRequest$Builder", "header", "(Ljava/lang/String;Ljava/lang/String;)Ljava/net/http/HttpRequest$Builder;", true));
+                    m.instructions.insertBefore(inst, inject);
+                }
+
                 // translate types in method signatures only within the application
                 if ((methowner.startsWith("app/"))) {
                     methodinst.desc = newdesc;
@@ -466,8 +403,6 @@ if (op == Opcodes.CHECKCAST && inst1.desc.equals("[B")) {
                     if (newowner != null) {
                         methodinst.owner = newowner;
                         methodinst.desc = newdesc;
-                        // If the original call was on an interface, we must change the opcode
-                        // to INVOKEVIRTUAL since our wrapper is a class.
                         if (op == Opcodes.INVOKEINTERFACE) {
                              MethodInsnNode newinst = new MethodInsnNode(Opcodes.INVOKEVIRTUAL, newowner, methodinst.name, newdesc, false);
                              m.instructions.set(inst, newinst);
@@ -478,12 +413,40 @@ if (op == Opcodes.CHECKCAST && inst1.desc.equals("[B")) {
                 }
                 
             } else {
-                InvokeDynamicInsnNode methodinst = (InvokeDynamicInsnNode)inst;
-                methname = methodinst.name;
-                methdesc = methodinst.desc;
-                meth = new Method(methname, methdesc);
-                System.out.println("instruction INVOKE [dynamic,"+methname+"]");
-                // here I suppose that dynamic invocations are not within the application
+                InvokeDynamicInsnNode dyninst = (InvokeDynamicInsnNode)inst;
+                methname = dyninst.name;
+                methdesc = dyninst.desc;
+
+                String newdesc = parseMethodDesc(dyninst.name, dyninst.desc, false);
+                dyninst.desc = newdesc;
+                meth = new Method(methname, newdesc);
+
+                Object[] bsmArgs = dyninst.bsmArgs;
+                for (int i = 0; i < bsmArgs.length; i++) {
+                    if (bsmArgs[i] instanceof Handle) {
+                        Handle h = (Handle) bsmArgs[i];
+                        String newOwner = classTranslation.get(h.getOwner());
+                        if (newOwner == null && h.getOwner().startsWith("app/")) newOwner = h.getOwner();
+
+                        String hNewDesc = parseMethodDesc(h.getName(), h.getDesc(), false);
+                        if (newOwner != null || !hNewDesc.equals(h.getDesc())) {
+                             bsmArgs[i] = new Handle(h.getTag(), newOwner != null ? newOwner : h.getOwner(), h.getName(), hNewDesc, h.isInterface());
+                        }
+                    } else if (bsmArgs[i] instanceof Type) {
+                        Type t = (Type) bsmArgs[i];
+                        if (t.getSort() == Type.METHOD) {
+                            String tNewDesc = parseMethodDesc("", t.getDescriptor(), false);
+                            if (!tNewDesc.equals(t.getDescriptor())) {
+                                bsmArgs[i] = Type.getMethodType(tNewDesc);
+                            }
+                        } else if (t.getSort() == Type.OBJECT || t.getSort() == Type.ARRAY) {
+                            String dest = typeTranslation.get(t.getDescriptor());
+                            if (dest != null) {
+                                bsmArgs[i] = Type.getType(dest);
+                            }
+                        }
+                    }
+                }
             }
 if (outside) {
     // Unwrap Pair → [B pour paramètres
@@ -492,14 +455,15 @@ if (outside) {
     for (int i = args.length - 1; i >= 0; i--) {
         StackInst v = stack.pop();
         if (args[i].getDescriptor().equals("[B")) {
+            AbstractInsnNode last = insertCheck(m.instructions, v.inst, stack);
             AbstractInsnNode next = new FieldInsnNode(Opcodes.GETFIELD, "pack/Pair", "_buff", "[B");
-            m.instructions.insert(v.inst, next);
-            System.out.println("add : GETFIELD (unwrap Pair param)");
+            m.instructions.insert(last, next);
             st.push(new OneSlotInst(next));
+        } else {
+            st.push(v);
         }
-        st.push(v);
     }
-    for (int i = args.length - 1; i >= 0; i--) stack.push(st.pop());
+    for (int i = 0; i < args.length; i++) stack.push(st.pop());
     
     stack.handle(inst);
     
@@ -507,43 +471,15 @@ if (outside) {
     String retdesc = meth.getReturnType().getDescriptor();
     String desttype = typeTranslation.get(retdesc);
     if (desttype != null) {
-        System.out.println("Wrapping external method return: " + retdesc + " → " + desttype);
         AbstractInsnNode next;
         
         if (retdesc.equals("[B")) {
-            // Wrap [B → Pair
-            next = new TypeInsnNode(Opcodes.NEW, "pack/Pair");
+            next = new MethodInsnNode(Opcodes.INVOKESTATIC, "pack/Pair", "wrap", "([B)Lpack/Pair;", false);
             m.instructions.insert(inst, next);
             inst = next;
-            System.out.println("add : NEW Pair");
-            stack.handle(inst);
-            
-            next = new InsnNode(Opcodes.DUP_X1);
-            m.instructions.insert(inst, next);
-            inst = next;
-            System.out.println("add : DUP_X1");
-            stack.handle(inst);
-            
-            next = new InsnNode(Opcodes.SWAP);
-            m.instructions.insert(inst, next);
-            inst = next;
-            System.out.println("add : SWAP");
-            stack.handle(inst);
-            
-            next = new InsnNode(Opcodes.ICONST_1);
-            m.instructions.insert(inst, next);
-            inst = next;
-            System.out.println("add : ICONST_1");
-            stack.handle(inst);
-            
-            next = new MethodInsnNode(Opcodes.INVOKESPECIAL, "pack/Pair", "<init>", "([BZ)V", false);
-            m.instructions.insert(inst, next);
-            inst = next;
-            System.out.println("add : INVOKESPECIAL Pair.<init>");
             stack.handle(inst);
         } 
         else if (retdesc.equals("Ljava/io/InputStream;")) {
-            // Wrapper InputStream → MyInputStream
             next = new TypeInsnNode(Opcodes.NEW, "odb/MyInputStream");
             m.instructions.insert(inst, next);
             inst = next;
@@ -569,14 +505,17 @@ if (outside) {
             inst = next;
             stack.handle(next);
             
-            next = new MethodInsnNode(Opcodes.INVOKESPECIAL, "odb/MyInputStream", "<init>", "(Ljava/io/InputStream;ZLjava/io/ObjectInputStream;)V", false);
+            next = new InsnNode(Opcodes.ICONST_0);
+            m.instructions.insert(inst, next);
+            inst = next;
+            stack.handle(next);
+
+            next = new MethodInsnNode(Opcodes.INVOKESPECIAL, "odb/MyInputStream", "<init>", "(Ljava/io/InputStream;ZLjava/io/ObjectInputStream;Z)V", false);
             m.instructions.insert(inst, next);
             inst = next;
             stack.handle(next);
         }
-        // AJOUTER ces deux cas pour les streams Servlet
         else if (retdesc.equals("Ljakarta/servlet/ServletInputStream;")) {
-            System.out.println("Wrapping ServletInputStream → MyServletInputStream");
             next = new TypeInsnNode(Opcodes.NEW, "odb/MyServletInputStream");
             m.instructions.insert(inst, next);
             inst = next;
@@ -598,7 +537,6 @@ if (outside) {
             stack.handle(next);
         }
         else if (retdesc.equals("Ljakarta/servlet/ServletOutputStream;")) {
-            System.out.println("Wrapping ServletOutputStream → MyServletOutputStream");
             next = new TypeInsnNode(Opcodes.NEW, "odb/MyServletOutputStream");
             m.instructions.insert(inst, next);
             inst = next;
@@ -640,38 +578,29 @@ if (outside) {
         next = new InsnNode(Opcodes.DUP);
         instructions.insert(inst, next);
         inst = next;
-        System.out.println("add : DUP");
         stack.handle(inst);
         next = new FieldInsnNode(Opcodes.GETFIELD, "pack/Pair", "_access", "Z");
         instructions.insert(inst, next);
         inst = next;
-        System.out.println("add : GETFIELD");
         stack.handle(inst);
         LabelNode labelContinue = new LabelNode();
         next = new JumpInsnNode(Opcodes.IFNE, labelContinue);
         instructions.insert(inst, next);
         inst = next;
-        System.out.println("add : IFNE");
         stack.handle(inst);
         next = new InsnNode(Opcodes.DUP);
         instructions.insert(inst, next);
         inst = next;
-        System.out.println("add : DUP");
         stack.handle(inst);
         next = new MethodInsnNode(Opcodes.INVOKESTATIC,"pack/Handler","bufferFault","(Lpack/Pair;)V",false);
         instructions.insert(inst, next);
         inst = next;
-        System.out.println("add : INVOKESTATIC");
         stack.handle(inst);
         next = labelContinue;
         instructions.insert(inst, next);
         inst = next;
-        System.out.println("add : LABEL");
         stack.handle(inst);
 
-        // before the insertCheck method, we have on the stack : Pair
-        // after the insertCheck method, we have on the stack : Pair
-        // return the last inserted instruction
         return inst;
      }
 
@@ -684,53 +613,15 @@ if (outside) {
         List<TryCatchBlockNode> ltc = m.tryCatchBlocks;
         Set<AbstractInsnNode> visited = new HashSet<AbstractInsnNode>();
         for (TryCatchBlockNode tcb : ltc) {
-            System.out.println("============== Exception Handlers ============");
             LabelNode label = tcb.handler;
             InstructionStack stack = new InstructionStack();
             stack.push(new OneSlotInst(null)); // exception that was pushed on the stack
             AbstractInsnNode inst = label;
-            System.out.println("Exception Handlers : parseBranch : "+ m.instructions.indexOf(inst));
             parseBranch(m, inst, visited, stack);
         }
 
     }
     
-    //////////////////////////////////////////
-static AbstractInsnNode wrapServletStream(MethodNode m, AbstractInsnNode inst, 
-                                          InstructionStack stack, 
-                                          String retType, String wrapperClass) {
-    System.out.println("Wrapping " + retType + " → " + wrapperClass);
-    AbstractInsnNode next;
-    
-    // Stack avant: Stream
-    next = new TypeInsnNode(Opcodes.NEW, wrapperClass);
-    m.instructions.insert(inst, next);
-    inst = next;
-    stack.handle(inst);
-    // Stack: Stream Wrapper(uninit)
-    
-    next = new InsnNode(Opcodes.DUP_X1);
-    m.instructions.insert(inst, next);
-    inst = next;
-    stack.handle(inst);
-    // Stack: Wrapper(uninit) Stream Wrapper(uninit)
-    
-    next = new InsnNode(Opcodes.SWAP);
-    m.instructions.insert(inst, next);
-    inst = next;
-    stack.handle(inst);
-    // Stack: Wrapper(uninit) Wrapper(uninit) Stream
-    
-    next = new MethodInsnNode(Opcodes.INVOKESPECIAL, wrapperClass, 
-                              "<init>", "(" + retType + ")V", false);
-    m.instructions.insert(inst, next);
-    inst = next;
-    stack.handle(inst);
-    // Stack: Wrapper
-    
-    return inst;
-}
-
     public static void main(String args[]) {
         
         try {
@@ -738,41 +629,22 @@ static AbstractInsnNode wrapServletStream(MethodNode m, AbstractInsnNode inst,
             ClassReader cr = new ClassReader(args[0]);
             cr.accept(cn, 0);
 
-            System.out.println("parsing class "+cn.name);
-
-            System.out.println("parsing fields");
+            cn.signature = null;
             List<FieldNode> lf = parseFields(cn.fields);
             cn.fields = lf;
-            System.out.println();
 
             for (MethodNode m : cn.methods) {
-                System.out.println("METHOD ("+m.name+"): old desc : "+ m.desc);
-
-                // parsing desc (signature is always null)
-
+                m.signature = null;
                 m.desc = parseMethodDesc(m.name,m.desc, true);
-                System.out.println("METHOD ("+m.name+"): new desc : "+ m.desc);
-
                 parseLocalVariables(m);
-
-                // I don't update maxLocals and maxStack
-
                 parseInstructions(m);
-
                 parseExceptionHandlers(m);
-
-                System.out.println();
             }
 
 
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-            org.objectweb.asm.util.CheckClassAdapter ca = new org.objectweb.asm.util.CheckClassAdapter(cw);
-            cn.accept(ca);
+            cn.accept(cw);
             byte[] b = cw.toByteArray();
-
-            // Optional: To see the verification errors right away
-            // java.io.PrintWriter pw = new java.io.PrintWriter(System.out);
-            // org.objectweb.asm.util.CheckClassAdapter.verify(new ClassReader(b), true, pw);
 
             File outputFile = new File("out/"+cn.name+".class");
             if (outputFile.exists()) outputFile.delete();
@@ -780,8 +652,10 @@ static AbstractInsnNode wrapServletStream(MethodNode m, AbstractInsnNode inst,
             FileOutputStream fos = new FileOutputStream(outputFile);
             fos.write(b);
             fos.close();
+            System.out.println("Parsed and saved: " + args[0]);
 
         } catch (Exception ex) {
+            System.err.println("Exception during parsing of " + args[0]);
             ex.printStackTrace();
         }
     }

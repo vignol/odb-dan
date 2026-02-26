@@ -1,26 +1,17 @@
 package pack;
 
-import java.util.function.Function;
+import odb.Downloader;
+import odb.VirtualDescriptor;
 
 public class Handler {
 
-        static Function<Pair, Integer> defaulthandler = (p) -> {
-                p._access = true;
-                System.out.println("#################################");
-                System.out.println("got buffer fault !!!");
-                System.out.println("#################################");
-                return null;
-        };
-
-        static Function<Pair, Integer> handler = defaulthandler; 
-
-
-        public static void registerHandler(Function<Pair, Integer> hdlr) {
-                handler = hdlr;
+    public static void bufferFault(Pair p) {
+        if (!p._access && p._desc instanceof VirtualDescriptor) {
+            VirtualDescriptor vd = (VirtualDescriptor)p._desc;
+            System.out.println("ODB: Fault detected! Downloading payload " + vd.payloadid + " from " + vd.host + ":" + vd.port);
+            p._buff = Downloader.download(vd.host, vd.port, vd.payloadid);
+            p._access = true;
         }
-
-        public static void bufferFault(Pair p) {
-                handler.apply(p);
-        }
+    }
 
 }
